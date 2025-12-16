@@ -5,6 +5,7 @@ import { AuthProvider } from "@/Components/Providers/AuthProvider";
 import { AxiosProvider } from "@/Components/Providers/AxiosProvider";
 import { RouteGuard } from "@/Components/Providers/RouteGuard";
 import { AnchoredToastProvider, ToastProvider } from "@/Components/ui/toast";
+import DashboardLayout from "@/Components/Layouts/DashboardLayout";
 
 //========== Font Configuration ===========
 const geistSans = Geist({
@@ -38,7 +39,9 @@ export default function RootLayout({
           <AuthProvider>
             <ToastProvider position="top-center">
               <AnchoredToastProvider>
-                <RouteGuard>{children}</RouteGuard>
+                <RouteGuard>
+                  <DashboardLayout>{children}</DashboardLayout>
+                </RouteGuard>
               </AnchoredToastProvider>
             </ToastProvider>
           </AuthProvider>
