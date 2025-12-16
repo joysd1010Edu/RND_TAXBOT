@@ -77,8 +77,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         id: "1",
         email: email,
         name: email.split("@")[0],
-        role: "admin", // Change this to "user" for user role testing
+        role: Math.random() > 0.5 ? "admin" : "user",
       };
+
 
       const storage = localStorage;
       storage.setItem("user", JSON.stringify(mockUser));
@@ -99,9 +100,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       //========== Redirect Based on Role ===========
       if (mockUser.role === "admin") {
-        router.push("/Dashboard");
+        router.push("/Admin/Dashboard");
       } else {
-        router.push("/UserDashboard");
+        router.push("/user/UserDashboard");
       }
     } catch (error) {
       console.error("Login error:", error);

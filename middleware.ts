@@ -25,12 +25,21 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  //========== Prevent Users with Role 'user' from Accessing Admin Pages ===========
+  if (pathname.startsWith("/Admin") && userRole !== "admin") {
+    return NextResponse.redirect(new URL("/403", request.url)); // Redirect to 403 page or any other page you prefer
+  }
+  //========== Prevent Users with Role 'admin' from Accessing user Pages ===========
+  if (pathname.startsWith("/user") && userRole !== "user") {
+    return NextResponse.redirect(new URL("/403", request.url)); // Redirect to 403 page or any other page you prefer
+  }
+
   //========== Redirect Authenticated Users Away from Public Routes ===========
   if (isPublicRoute && accessToken) {
     if (userRole === "admin") {
-      return NextResponse.redirect(new URL("/Dashboard", request.url));
+      return NextResponse.redirect(new URL("/Admin/Dashboard", request.url));
     } else {
-      return NextResponse.redirect(new URL("/UserDashboard", request.url));
+      return NextResponse.redirect(new URL("/user/UserDashboard", request.url));
     }
   }
 
@@ -44,9 +53,9 @@ export function middleware(request: NextRequest) {
   //========== Redirect Root to Appropriate Dashboard ===========
   if (pathname === "/" && accessToken) {
     if (userRole === "admin") {
-      return NextResponse.redirect(new URL("/Dashboard", request.url));
+      return NextResponse.redirect(new URL("/Admin/Dashboard", request.url));
     } else {
-      return NextResponse.redirect(new URL("/UserDashboard", request.url));
+      return NextResponse.redirect(new URL("/user/UserDashboard", request.url));
     }
   }
 

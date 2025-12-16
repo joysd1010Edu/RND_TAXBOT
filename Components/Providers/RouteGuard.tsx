@@ -28,7 +28,7 @@ export const RouteGuard: React.FC<{ children: React.ReactNode }> = ({
 
       
       if (isAuthenticated && pathname === "/") {
-        router.push("/Dashboard");
+        router.push("/Admin/Dashboard");
       }
     }
   }, [isAuthenticated, isLoading, isPublicRoute, pathname, router]);
