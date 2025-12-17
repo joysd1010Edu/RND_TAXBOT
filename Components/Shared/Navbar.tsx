@@ -54,17 +54,17 @@ const Navbar: React.FC<NavbarProps> = ({
     { label: "Dashboard", href: "/Dashboard", icon: <MdDashboard size={20} /> },
     {
       label: "Analytics & Reports",
-      href: "/Analytics",
+      href: "/Admin/Analytics",
       icon: <MdBarChart size={20} />,
     },
-    { label: "User Management", href: "/Users", icon: <MdPeople size={20} /> },
+    { label: "User Management", href: "/Admin/Users", icon: <MdPeople size={20} /> },
     {
       label: "Project Management",
-      href: "/Projects",
+      href: "/Admin/Projects",
       icon: <MdFolder size={20} />,
     },
-    { label: "Support Inbox", href: "/Support", icon: <MdMessage size={20} /> },
-    { label: "Settings", href: "/Settings", icon: <MdSettings size={20} /> },
+    { label: "Support Inbox", href: "/Admin/Support", icon: <MdMessage size={20} /> },
+    { label: "Settings", href: "/Admin/Settings", icon: <MdSettings size={20} /> },
   ];
 
   const userNavItems: NavItem[] = [

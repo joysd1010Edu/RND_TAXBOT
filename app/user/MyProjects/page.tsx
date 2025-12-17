@@ -1,9 +1,18 @@
-import React from 'react'
+"use client";
 
-const page = () => {
-  return (
-    <div>My Projects page</div>
-  )
-}
+import React, { useEffect } from "react";
+import { usePageTitle } from "@/Components/Providers/PageTitleProvider";
+import MyProject from "@/Components/UserDashboard/MyProjects/MyProject";
 
-export default page
+//========== My Projects Page ===========
+const Page = () => {
+  const { setPageTitle } = usePageTitle();
+
+  useEffect(() => {
+    setPageTitle("My Projects");
+  }, [setPageTitle]);
+
+  return <MyProject />;
+};
+
+export default Page;

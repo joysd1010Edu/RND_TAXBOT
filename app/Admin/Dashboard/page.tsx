@@ -1,11 +1,17 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { MdPeople, MdAssignment, MdPendingActions } from "react-icons/md";
 import StatCard from "@/Components/Shared/Cards/StatCard";
+import { usePageTitle } from "@/Components/Providers/PageTitleProvider";
 
 //========== Admin Dashboard Page ===========
 const Page = () => {
+  const { setPageTitle } = usePageTitle();
+
+  useEffect(() => {
+    setPageTitle("Dashboard");
+  }, [setPageTitle]);
   return (
     <div className="space-y-6">
       {/*========= Welcome Section =========*/}

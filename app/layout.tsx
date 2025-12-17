@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/Components/Providers/AuthProvider";
 import { AxiosProvider } from "@/Components/Providers/AxiosProvider";
 import { RouteGuard } from "@/Components/Providers/RouteGuard";
+import { ErrorPageProvider } from "@/Components/Providers/ErrorPageProvider";
+import { PageTitleProvider } from "@/Components/Providers/PageTitleProvider";
 import { AnchoredToastProvider, ToastProvider } from "@/Components/ui/toast";
 import DashboardLayout from "@/Components/Layouts/DashboardLayout";
 
@@ -18,6 +20,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+
+
+
 //========== Metadata ===========
 export const metadata: Metadata = {
   title: "PATTENS - Tax Bot",
@@ -31,19 +36,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AxiosProvider>
           <AuthProvider>
-            <ToastProvider position="top-center">
-              <AnchoredToastProvider>
-                <RouteGuard>
-                  <DashboardLayout>{children}</DashboardLayout>
-                </RouteGuard>
-              </AnchoredToastProvider>
-            </ToastProvider>
+            <ErrorPageProvider>
+              <PageTitleProvider>
+                <ToastProvider position="top-center">
+                  <AnchoredToastProvider>
+                    <RouteGuard>
+                      <DashboardLayout>{children}</DashboardLayout>
+                    </RouteGuard>
+                  </AnchoredToastProvider>
+                </ToastProvider>
+              </PageTitleProvider>
+            </ErrorPageProvider>
           </AuthProvider>
         </AxiosProvider>
       </body>

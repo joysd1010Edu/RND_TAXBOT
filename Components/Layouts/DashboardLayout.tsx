@@ -5,6 +5,8 @@ import { useState } from "react";
 import Navbar from "@/Components/Shared/Navbar";
 import TopBar from "@/Components/Shared/TopBar";
 import { useAuth } from "@/Components/Providers/AuthProvider";
+import { useErrorPage } from "@/Components/Providers/ErrorPageProvider";
+import { usePageTitle } from "@/Components/Providers/PageTitleProvider";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,36 +16,36 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { isErrorPage } = useErrorPage();
 
   //========== Sidebar State Management ===========
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   //========== Public Routes (No Navbar/TopBar) ===========
-  const publicRoutes = ["/Login", "/Forgot", "/"];
-  const isPublicRoute = publicRoutes.some((route) => pathname === route);
+  const publicRoutes = [
+    "/Login",
+    "/Forgot",
+    "/",
+    "/403",
+    "/not-found",
+    "/Not-found",
+  ];
+  const isPublicRoute =
+    publicRoutes.some((route) => pathname === route) ||
+    pathname === null ||
+    isErrorPage;
 
   //========== Determine User Role ===========
   const userRole = user?.role === "admin" ? "admin" : "user";
-
-  //========== Get Page Title ===========
-  const getPageTitle = () => {
-    const pathSegments = pathname.split("/").filter(Boolean);
-    if (pathSegments.length === 0) return "Dashboard";
-
-    const lastSegment = pathSegments[pathSegments.length - 1];
-    return (
-      lastSegment.charAt(0).toUpperCase() +
-      lastSegment.slice(1).replace(/([A-Z])/g, " $1")
-    );
-  };
+  const { pageTitle } = usePageTitle();
 
   if (isPublicRoute) {
     return <>{children}</>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen  bg-gray-50">
       <Navbar
         userRole={userRole}
         isSidebarOpen={isSidebarOpen}
@@ -52,7 +54,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         setIsCollapsed={setIsCollapsed}
       />
       <TopBar
-        title={getPageTitle()}
+        title={pageTitle}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         isCollapsed={isCollapsed}

@@ -148,5 +148,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: Arial, Helvetica, sans-serif;
   }
 }

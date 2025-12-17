@@ -1,15 +1,6 @@
 import React from "react";
-import { MdMoreVert } from "react-icons/md";
+import { ProjectCardProps } from "@/Type/UserDashboard/Dashboard";
 
-interface ProjectCardProps {
-  title: string;
-  description: string;
-  isEmpty?: boolean;
-  emptyMessage?: string;
-  children?: React.ReactNode;
-  actionButton?: React.ReactNode;
-  headerAction?: React.ReactNode;
-}
 
 //========== Project Card Component ===========
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -22,9 +13,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   headerAction,
 }) => {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
       {/*========= Card Header =========*/}
-      <div className="p-6 border-b border-gray-200">
+      <div className="px-6 py-5 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
