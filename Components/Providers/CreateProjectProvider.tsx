@@ -201,7 +201,7 @@ export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
     saveDraft,
     submitProject,
     isEditMode,
-    projectId,
+    projectId: projectId || undefined,
   };
 
   return (
