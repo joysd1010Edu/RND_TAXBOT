@@ -53,7 +53,7 @@ const FinancialAnalysis: React.FC<FinancialAnalysisProps> = ({
   const overallRndPercentage = Math.round((totalRnd / grandTotal) * 100);
 
   return (
-    <div className="bg-white shadow-lg border border-gray-200 p-6 sm:p-8 space-y-8">
+    <div className="bg-white shadow-lg border border-gray-200 p-6 sm:p-8 space-y-6">
       {/*========= Section Title =========*/}
       <h2 className="text-xl sm:text-2xl font-normal text-gray-900">
         Financial Analysis & Budget Breakdown

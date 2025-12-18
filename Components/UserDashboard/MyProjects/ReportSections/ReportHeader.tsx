@@ -30,7 +30,7 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
   status,
 }) => {
   return (
-    <div className="bg-white rounded-t-xl shadow-lg border border-gray-200 p-4 lg:p-8 sm:p-12 text-center space-y-6">
+    <div className="bg-white rounded-t-lg shadow-lg border border-gray-200 p-4 lg:p-8 sm:p-12 text-center space-y-6">
       {/*========= Document Icon =========*/}
       <div className="flex justify-center">
         <div className="w-20 h-20 sm:w-24 sm:h-24  flex items-center justify-center">

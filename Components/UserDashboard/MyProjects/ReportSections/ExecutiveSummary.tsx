@@ -2,12 +2,10 @@
 
 import React from "react";
 import { MdCheckCircle } from "react-icons/md";
-import {  ExecutiveSummaryProps } from "@/Type/UserDashboard/ComplianceReport";
+import { ExecutiveSummaryProps } from "@/Type/UserDashboard/ComplianceReport";
 import { HiOutlineBolt } from "react-icons/hi2";
 import { PiTrendUpDuotone } from "react-icons/pi";
 import { LuUsers } from "react-icons/lu";
-
-
 
 //========== Executive Summary Component ===========
 const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
@@ -20,13 +18,16 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
   businessMetrics,
   complianceText,
 }) => {
-
-    const color = [
-      "from-[#00C950] to-[#00A63E]",
-      "from-[#2B7FFF] to-[#155DFC]",
-      "from-[#AD46FF] to-[#9810FA]",
-    ];
-    const icon = [<PiTrendUpDuotone size={36} />,<HiOutlineBolt size={36}/>,  <LuUsers size={36} />];
+  const color = [
+    "from-[#00C950] to-[#00A63E]",
+    "from-[#2B7FFF] to-[#155DFC]",
+    "from-[#AD46FF] to-[#9810FA]",
+  ];
+  const icon = [
+    <PiTrendUpDuotone size={36} />,
+    <HiOutlineBolt size={36} />,
+    <LuUsers size={36} />,
+  ];
   return (
     <div className="bg-white shadow-lg border border-gray-200 p-6 sm:p-8 space-y-6">
       {/*========= Section Title =========*/}
@@ -88,9 +89,7 @@ const ExecutiveSummary: React.FC<ExecutiveSummaryProps> = ({
               className={`bg-linear-to-b ${color[index]} rounded-xl p-6 text-white`}
             >
               <div className="text-3xl mb-3">{icon[index]}</div>
-              <div className="text-3xl sm:text-4xl mb-2">
-                {metric.value}
-              </div>
+              <div className="text-3xl sm:text-4xl mb-2">{metric.value}</div>
               <div className="text-sm font-medium opacity-90">
                 {metric.label}
               </div>

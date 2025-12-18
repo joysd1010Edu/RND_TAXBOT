@@ -61,10 +61,9 @@ const TeamComposition: React.FC<TeamCompositionProps> = ({
                     {member.name}
                   </h3>
                 </div>
-                  <p className="text-lg text-gray-500">{member.role}</p>
+                <p className="text-lg text-gray-500">{member.role}</p>
               </div>
 
-              
               <div className="flex items-center gap-2 text-blue-600">
                 <MdAccessTime size={20} />
                 <span className="text-lg font-normal">{member.hours} hrs</span>
@@ -87,42 +86,40 @@ const TeamComposition: React.FC<TeamCompositionProps> = ({
       </div>
 
       {/*========= Summary Statistics =========*/}
-      
-        <div className="grid grid-cols-1  md:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl  text-blue-600 mb-2">
-              {advancedDegrees}
-            </div>
-            <div className="text-sm text-gray-600">
-              Advanced Degrees
-              <br />
-              <span className="text-xs text-gray-500">(PhDs/MSc)</span>
-            </div>
+
+      <div className="grid grid-cols-1  md:grid-cols-3 gap-6 pt-6 border-t border-gray-200">
+        <div className="text-center">
+          <div className="text-3xl sm:text-4xl  text-blue-600 mb-2">
+            {advancedDegrees}
           </div>
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl  text-green-600 mb-2">
-              {totalHours.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-600">
-              Total R&D Hours
-              <br />
-              <span className="text-xs text-gray-500">Qualifying Time</span>
-            </div>
+          <div className="text-sm text-gray-600">
+            Advanced Degrees
+            <br />
+            <span className="text-xs text-gray-500">(PhDs/MSc)</span>
           </div>
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl  text-purple-600 mb-2">
-              {rndFocusRate}%
-            </div>
-            <div className="text-sm text-gray-600">
-              R&D Focus Rate
-              <br />
-              <span className="text-xs text-gray-500">Team Allocation</span>
-            </div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl sm:text-4xl  text-green-600 mb-2">
+            {totalHours.toLocaleString()}
           </div>
-        
+          <div className="text-sm text-gray-600">
+            Total R&D Hours
+            <br />
+            <span className="text-xs text-gray-500">Qualifying Time</span>
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl sm:text-4xl  text-purple-600 mb-2">
+            {rndFocusRate}%
+          </div>
+          <div className="text-sm text-gray-600">
+            R&D Focus Rate
+            <br />
+            <span className="text-xs text-gray-500">Team Allocation</span>
+          </div>
         </div>
       </div>
-    
+    </div>
   );
 };
 

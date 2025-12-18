@@ -21,7 +21,7 @@ interface InnovationMetricsProps {
 //========== Innovation & Technical Advancement Metrics Component ===========
 const InnovationMetrics: React.FC<InnovationMetricsProps> = ({ metrics }) => {
   return (
-    <div className="bg-white shadow-lg border-b border-l border-r border-gray-200 p-6 sm:p-8 space-y-6">
+    <div className="bg-white shadow-lg border border-gray-200 p-6 sm:p-8 space-y-6">
       {/*========= Section Title =========*/}
       <h2 className="text-xl sm:text-2xl font-normal text-gray-900">
         Innovation & Technical Advancement Metrics

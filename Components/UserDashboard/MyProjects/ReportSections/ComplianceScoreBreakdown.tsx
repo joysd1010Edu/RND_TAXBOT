@@ -27,7 +27,7 @@ const ComplianceScoreBreakdown: React.FC<ComplianceScoreProps> = ({
   const COLORS = categories.map((cat) => cat.color);
 
   return (
-    <div className="bg-white shadow-lg border-t border-l border-r border-gray-200 p-6 sm:p-8 space-y-6">
+    <div className="bg-white shadow-lg border border-gray-200 p-6 sm:p-8 space-y-6">
       {/*========= Section Title =========*/}
       <h2 className="text-xl sm:text-2xl font-normal text-gray-900">
         Compliance Score Breakdown
@@ -81,7 +81,7 @@ const ComplianceScoreBreakdown: React.FC<ComplianceScoreProps> = ({
             {categories.map((category, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-center justify-between p-4 bg-gray-50  hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div

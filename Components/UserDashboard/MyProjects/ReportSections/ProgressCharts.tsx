@@ -33,7 +33,7 @@ const ProgressCharts: React.FC<ProgressChartsProps> = ({
   resourceData,
 }) => {
   return (
-    <div className="bg-white shadow-lg border border-gray-200 p-6 sm:p-8 space-y-8">
+    <div className="bg-white shadow-lg border border-gray-200 p-6 sm:p-8 space-y-6">
       {/*========= Project Progress Over Time =========*/}
       <div className="space-y-4">
         <h2 className="text-xl sm:text-2xl font-normal text-gray-900">
