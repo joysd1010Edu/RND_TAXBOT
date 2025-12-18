@@ -1,10 +1,9 @@
+import CreateProject from '@/components/UserDashboard/CreateProject/CreateProject'
 import React from 'react'
 
 const page = () => {
   return (
-    <div>
-        create project page
-    </div>
+    <CreateProject /> 
   )
 }
 

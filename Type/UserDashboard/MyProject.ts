@@ -1,6 +1,10 @@
 //========== Project Types ===========
 
-export type ProjectStatus = "draft" | "completed" | "pending-review";
+export type ProjectStatus =
+  | "draft"
+  | "completed"
+  | "pending-review"
+  | "under_review";
 
 export interface Project {
   id: string;

@@ -25,12 +25,13 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project }) => {
   };
 
   const handleEditProject = () => {
-    router.push(`/user/MyProjects/${project.id}/edit`);
+    // Navigate to CreateProject with project ID for editing
+    router.push(`/user/CreateProject?id=${project.id}`);
   };
 
   const handleRenewProject = () => {
-    // Handle renew logic
-    console.log("Renew project:", project.id);
+    // Navigate to CreateProject for renewal (creates a copy)
+    router.push(`/user/CreateProject?renewFrom=${project.id}`);
   };
 
   //========== Status Badge Styling ===========
@@ -42,6 +43,8 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project }) => {
         return "bg-green-100 text-green-700";
       case "pending-review":
         return "bg-blue-100 text-blue-700";
+      case "under_review":
+        return "bg-purple-100 text-purple-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -55,6 +58,8 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project }) => {
         return "Completed";
       case "pending-review":
         return "Pending Review";
+      case "under_review":
+        return "Sent for Review";
       default:
         return "Unknown";
     }

@@ -72,6 +72,16 @@ const dummyProjects: Project[] = [
     canEdit: false,
     canRenew: false,
   },
+  {
+    id: "7",
+    title: "IoT-Based Smart Building System",
+    fiscalYear: "FY 2025",
+    progress: 100,
+    status: "under_review",
+    lastUpdated: "Q4 2025",
+    canEdit: false,
+    canRenew: false,
+  },
 ];
 
 //========== My Projects Component ===========
@@ -160,12 +170,8 @@ const MyProject: React.FC = () => {
               <option value="all">All Statuses</option>
               <option value="draft">Draft</option>
               <option value="completed">Completed</option>
-              <option
-                value="pending-review"
-                className=" px-2 py-2 rounded-b-2xl"
-              >
-                Pending Review
-              </option>
+              <option value="pending-review">Pending Review</option>
+              <option value="under_review">Sent for Review</option>
             </select>
           </div>
         </div>
