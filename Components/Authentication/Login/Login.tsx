@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useAuth } from "@/Components/Providers/AuthProvider";
+import { useAuth } from "@/components/Providers/AuthProvider";
 import type { loginFormValues } from "@/Type/Authentication/Login";
 import Link from "next/link";
 import Image from "next/image";
 import { FiLock, FiMail } from "react-icons/fi";
-import { toastManager } from "@/Components/ui/toast";
+import { toastManager } from "@/components/ui/toast";
 
 //========== Login Component ===========
 const Login = () => {

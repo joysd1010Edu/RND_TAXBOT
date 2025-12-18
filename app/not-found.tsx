@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { MdArrowBack } from "react-icons/md";
 import { useEffect } from "react";
-import { useErrorPage } from "@/Components/Providers/ErrorPageProvider";
+import { useErrorPage } from "@/components/Providers/ErrorPageProvider";
 
 //========== 404 Not Found Page ===========
 const NotFound = () => {

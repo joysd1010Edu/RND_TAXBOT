@@ -1,4 +1,4 @@
-import ProjectDetails from "@/Components/UserDashboard/MyProjects/ProjectDetails";
+import ProjectDetails from "@/components/UserDashboard/MyProjects/ProjectDetails";
 
 //========== Project Details Page ===========
 const Page = () => {

@@ -12,7 +12,7 @@ import {
   FaClock,
   FaChartLine,
 } from "react-icons/fa";
-import { usePageTitle } from "@/Components/Providers/PageTitleProvider";
+import { usePageTitle } from "@/components/Providers/PageTitleProvider";
 import ReportHeader from "./ReportSections/ReportHeader";
 import ExecutiveSummary from "./ReportSections/ExecutiveSummary";
 import ComplianceScoreBreakdown from "./ReportSections/ComplianceScoreBreakdown";
@@ -34,7 +34,7 @@ import { complianceReportData } from "@/Data/UserDashboard/complianceReportData"
 const ProjectDetails: React.FC = () => {
   const params = useParams();
   const { setPageTitle } = usePageTitle();
-  const projectId =1 //TODO: replace with params.projectId when dynamic routing is set up
+  const projectId = 1; //TODO: replace with params.projectId when dynamic routing is set up
 
   const reportData = complianceReportData[projectId];
 

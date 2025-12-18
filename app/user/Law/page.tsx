@@ -1,10 +1,8 @@
-import Laws from '@/Components/UserDashboard/Laws/Laws'
-import React from 'react'
+import Laws from "@/components/UserDashboard/Laws/Laws";
+import React from "react";
 
 const page = () => {
-  return (
-    <Laws />
-  )
-}
+  return <Laws />;
+};
 
-export default page
+export default page;

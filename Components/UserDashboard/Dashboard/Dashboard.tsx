@@ -1,21 +1,20 @@
-
 "use client";
 import { useEffect } from "react";
-import {  MdArrowForward, MdAccessTime } from "react-icons/md";
-import StatCard from "@/Components/Shared/Cards/StatCard";
-import ProjectCard from "@/Components/Shared/Cards/ProjectCard";
+import { MdArrowForward, MdAccessTime } from "react-icons/md";
+import StatCard from "@/components/Shared/Cards/StatCard";
+import ProjectCard from "@/components/Shared/Cards/ProjectCard";
 import Link from "next/link";
-import { usePageTitle } from "@/Components/Providers/PageTitleProvider";
+import { usePageTitle } from "@/components/Providers/PageTitleProvider";
 import { FiCheckCircle } from "react-icons/fi";
 import { LuCircleAlert } from "react-icons/lu";
 
 //========== Dashboard Component ===========
 const Dashboard = () => {
-    const { setPageTitle } = usePageTitle();
+  const { setPageTitle } = usePageTitle();
 
-    useEffect(() => {
-      setPageTitle("Dashboard");
-    }, [setPageTitle]);
+  useEffect(() => {
+    setPageTitle("Dashboard");
+  }, [setPageTitle]);
   return (
     <div className="space-y-6 lg:px-10">
       {/*========= Welcome Section =========*/}

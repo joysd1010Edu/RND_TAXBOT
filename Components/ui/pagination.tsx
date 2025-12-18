@@ -1,10 +1,10 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MoreHorizontalIcon,
-} from "lucide-react";
+  HiOutlineChevronLeft as ChevronLeftIcon,
+  HiOutlineChevronRight as ChevronRightIcon,
+  HiOutlineEllipsisHorizontal as MoreHorizontalIcon,
+} from "react-icons/hi2";
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -59,7 +59,7 @@ function PaginationLink({
             size,
             variant: isActive ? "outline" : "ghost",
           }),
-          className,
+          className
         ),
     "data-active": isActive,
     "data-slot": "pagination-link",

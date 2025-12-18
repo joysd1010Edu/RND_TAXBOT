@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/Components/Providers/AuthProvider";
-import { AxiosProvider } from "@/Components/Providers/AxiosProvider";
-import { RouteGuard } from "@/Components/Providers/RouteGuard";
-import { ErrorPageProvider } from "@/Components/Providers/ErrorPageProvider";
-import { PageTitleProvider } from "@/Components/Providers/PageTitleProvider";
-import { AnchoredToastProvider, ToastProvider } from "@/Components/ui/toast";
-import DashboardLayout from "@/Components/Layouts/DashboardLayout";
+import { AuthProvider } from "@/components/Providers/AuthProvider";
+import { AxiosProvider } from "@/components/Providers/AxiosProvider";
+import { RouteGuard } from "@/components/Providers/RouteGuard";
+import { ErrorPageProvider } from "@/components/Providers/ErrorPageProvider";
+import { PageTitleProvider } from "@/components/Providers/PageTitleProvider";
+import { AnchoredToastProvider, ToastProvider } from "@/components/ui/toast";
+import DashboardLayout from "@/components/Layouts/DashboardLayout";
 
 //========== Font Configuration ===========
 const geistSans = Geist({
@@ -19,9 +19,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-
-
 
 //========== Metadata ===========
 export const metadata: Metadata = {

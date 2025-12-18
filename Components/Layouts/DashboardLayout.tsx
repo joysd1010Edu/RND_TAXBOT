@@ -2,11 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import Navbar from "@/Components/Shared/Navbar";
-import TopBar from "@/Components/Shared/TopBar";
-import { useAuth } from "@/Components/Providers/AuthProvider";
-import { useErrorPage } from "@/Components/Providers/ErrorPageProvider";
-import { usePageTitle } from "@/Components/Providers/PageTitleProvider";
+import Navbar from "@/components/Shared/Navbar";
+import TopBar from "@/components/Shared/TopBar";
+import { useAuth } from "@/components/Providers/AuthProvider";
+import { useErrorPage } from "@/components/Providers/ErrorPageProvider";
+import { usePageTitle } from "@/components/Providers/PageTitleProvider";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

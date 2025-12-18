@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from "@/Components/Providers/AuthProvider";
+import { useAuth } from "@/components/Providers/AuthProvider";
 
 //========== Route Guard Component ===========
 export const RouteGuard: React.FC<{ children: React.ReactNode }> = ({
@@ -21,12 +21,10 @@ export const RouteGuard: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     //========== Authentication Check ===========
     if (!isLoading) {
-      
       if (!isAuthenticated && !isPublicRoute && pathname !== "/") {
         router.push(`/Login?redirect=${pathname}`);
       }
 
-      
       if (isAuthenticated && pathname === "/") {
         router.push("/Admin/Dashboard");
       }

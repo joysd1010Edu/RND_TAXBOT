@@ -1,6 +1,9 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
-import { ChevronRight, MoreHorizontal } from "lucide-react";
+import {
+  HiOutlineChevronRight as ChevronRight,
+  HiOutlineEllipsisHorizontal as MoreHorizontal,
+} from "react-icons/hi2";
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -14,7 +17,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
     <ol
       className={cn(
         "wrap-break-word flex flex-wrap items-center gap-1.5 text-muted-foreground text-sm sm:gap-2.5",
-        className,
+        className
       )}
       data-slot="breadcrumb-list"
       {...props}

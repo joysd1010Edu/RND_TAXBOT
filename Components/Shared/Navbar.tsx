@@ -17,7 +17,7 @@ import {
   MdChevronLeft,
   MdChevronRight,
 } from "react-icons/md";
-import { useAuth } from "@/Components/Providers/AuthProvider";
+import { useAuth } from "@/components/Providers/AuthProvider";
 import { GoLaw } from "react-icons/go";
 import { FaPlus } from "react-icons/fa";
 
@@ -57,14 +57,26 @@ const Navbar: React.FC<NavbarProps> = ({
       href: "/Admin/Analytics",
       icon: <MdBarChart size={20} />,
     },
-    { label: "User Management", href: "/Admin/Users", icon: <MdPeople size={20} /> },
+    {
+      label: "User Management",
+      href: "/Admin/Users",
+      icon: <MdPeople size={20} />,
+    },
     {
       label: "Project Management",
       href: "/Admin/Projects",
       icon: <MdFolder size={20} />,
     },
-    { label: "Support Inbox", href: "/Admin/Support", icon: <MdMessage size={20} /> },
-    { label: "Settings", href: "/Admin/Settings", icon: <MdSettings size={20} /> },
+    {
+      label: "Support Inbox",
+      href: "/Admin/Support",
+      icon: <MdMessage size={20} />,
+    },
+    {
+      label: "Settings",
+      href: "/Admin/Settings",
+      icon: <MdSettings size={20} />,
+    },
   ];
 
   const userNavItems: NavItem[] = [

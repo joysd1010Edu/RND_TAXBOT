@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { MdArrowBack } from "react-icons/md";
 import { useEffect } from "react";
-import { useErrorPage } from "@/Components/Providers/ErrorPageProvider";
+import { useErrorPage } from "@/components/Providers/ErrorPageProvider";
 
 //========== 403 Forbidden Page ===========
 const ForbiddenPage = () => {

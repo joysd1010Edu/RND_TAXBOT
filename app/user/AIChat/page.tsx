@@ -1,9 +1,8 @@
-import React from 'react'
+import Chat from "@/components/UserDashboard/AIChat/Chat";
+import React from "react";
 
 const page = () => {
-  return (
-    <div>AI Chat page</div>
-  )
-}
+  return <Chat />;
+};
 
-export default page
+export default page;

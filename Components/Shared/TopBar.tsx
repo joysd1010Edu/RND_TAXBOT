@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { useAuth } from "@/Components/Providers/AuthProvider";
+import { useAuth } from "@/components/Providers/AuthProvider";
 import {
   MdHelpOutline,
   MdNotifications,
@@ -70,13 +70,7 @@ const TopBar: React.FC<TopBarProps> = ({
               <MdMenu size={24} className="text-gray-600" />
             )}
           </button>
-          <Image
-            src="/logo.png"
-            alt="Logo"
-            width={40}
-            height={40}
-            priority
-          />
+          <Image src="/logo.png" alt="Logo" width={40} height={40} priority />
         </div>
 
         {/*========= Page Title  =========*/}

@@ -1,10 +1,7 @@
-
-import Dashboard from "@/Components/UserDashboard/Dashboard/Dashboard";
+import Dashboard from "@/components/UserDashboard/Dashboard/Dashboard";
 
 //========== User Dashboard Page ===========
 const Page = () => {
-
-
   return <Dashboard />;
 };
 

@@ -8,7 +8,7 @@ import {
   FilterState,
   ProjectStatus,
 } from "@/Type/UserDashboard/MyProject";
-import ProjectListCard from "@/Components/Shared/Cards/ProjectListCard";
+import ProjectListCard from "@/components/Shared/Cards/ProjectListCard";
 
 //========== Dummy Data ===========
 const dummyProjects: Project[] = [
@@ -160,7 +160,12 @@ const MyProject: React.FC = () => {
               <option value="all">All Statuses</option>
               <option value="draft">Draft</option>
               <option value="completed">Completed</option>
-              <option value="pending-review" className=" px-2 py-2 rounded-b-2xl">Pending Review</option>
+              <option
+                value="pending-review"
+                className=" px-2 py-2 rounded-b-2xl"
+              >
+                Pending Review
+              </option>
             </select>
           </div>
         </div>

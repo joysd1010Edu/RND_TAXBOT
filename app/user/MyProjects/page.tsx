@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { usePageTitle } from "@/Components/Providers/PageTitleProvider";
-import MyProject from "@/Components/UserDashboard/MyProjects/MyProject";
+import { usePageTitle } from "@/components/Providers/PageTitleProvider";
+import MyProject from "@/components/UserDashboard/MyProjects/MyProject";
 
 //========== My Projects Page ===========
 const Page = () => {

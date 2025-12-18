@@ -2,8 +2,8 @@
 
 import React, { useEffect } from "react";
 import { MdPeople, MdAssignment, MdPendingActions } from "react-icons/md";
-import StatCard from "@/Components/Shared/Cards/StatCard";
-import { usePageTitle } from "@/Components/Providers/PageTitleProvider";
+import StatCard from "@/components/Shared/Cards/StatCard";
+import { usePageTitle } from "@/components/Providers/PageTitleProvider";
 
 //========== Admin Dashboard Page ===========
 const Page = () => {
