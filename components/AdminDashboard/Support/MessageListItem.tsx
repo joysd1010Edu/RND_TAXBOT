@@ -57,7 +57,6 @@ const MessageListItem: React.FC<MessageListItemProps> = ({
         </span>
       </div>
 
-      {/*========== Subject ==========*/}
       <p className="text-sm text-gray-700 mb-2">{message.subject}</p>
 
       {/*========== Status and Time ==========*/}
