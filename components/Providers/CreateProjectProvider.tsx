@@ -141,14 +141,12 @@ export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
         title: "Draft Saved",
         description: "Your project has been saved as a draft successfully.",
         type: "success",
-        duration: 3000,
       });
     } catch (error) {
       toastManager.add({
         title: "Error",
         description: "Failed to save draft. Please try again.",
         type: "error",
-        duration: 3000,
       });
     }
   }, [formData, projectId]);
@@ -174,7 +172,6 @@ export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
         title: "Project Submitted",
         description: "Your R&D project has been sent for review successfully.",
         type: "success",
-        duration: 3000,
       });
 
       // Redirect to projects list
@@ -186,7 +183,6 @@ export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
         title: "Error",
         description: "Failed to submit project. Please try again.",
         type: "error",
-        duration: 3000,
       });
     }
   }, [formData, projectId, router]);
