@@ -33,6 +33,8 @@ interface NavbarProps {
   setIsSidebarOpen: (value: boolean) => void;
   isCollapsed: boolean;
   setIsCollapsed: (value: boolean) => void;
+  isNotificationOpen?: boolean;
+  setIsNotificationOpen?: (value: boolean) => void;
 }
 
 //========== Navbar Component ===========
@@ -42,6 +44,8 @@ const Navbar: React.FC<NavbarProps> = ({
   setIsSidebarOpen,
   isCollapsed,
   setIsCollapsed,
+  isNotificationOpen,
+  setIsNotificationOpen,
 }) => {
   const pathname = usePathname();
   const router = useRouter();
@@ -51,30 +55,34 @@ const Navbar: React.FC<NavbarProps> = ({
 
   //========== Navigation Items Based on Role ===========
   const adminNavItems: NavItem[] = [
-    { label: "Dashboard", href: "/Dashboard", icon: <MdDashboard size={20} /> },
+    {
+      label: "Dashboard",
+      href: "/Admin/Dashboard",
+      icon: <MdDashboard size={20} />,
+    },
     {
       label: "Analytics & Reports",
-      href: "/Admin/Analytics",
+      href: "/Admin/analytics",
       icon: <MdBarChart size={20} />,
     },
     {
       label: "User Management",
-      href: "/Admin/Users",
+      href: "/Admin/userManagement",
       icon: <MdPeople size={20} />,
     },
     {
       label: "Project Management",
-      href: "/Admin/Projects",
+      href: "/Admin/projectManagement",
       icon: <MdFolder size={20} />,
     },
     {
       label: "Support Inbox",
-      href: "/Admin/Support",
+      href: "/Admin/support",
       icon: <MdMessage size={20} />,
     },
     {
       label: "Settings",
-      href: "/Admin/Settings",
+      href: "/Admin/settings",
       icon: <MdSettings size={20} />,
     },
   ];
@@ -198,9 +206,12 @@ const Navbar: React.FC<NavbarProps> = ({
         {/*========= Notifications & User Profile (Mobile/Tablet) =========*/}
         <div className="lg:hidden border-t border-white/10 p-4 space-y-4">
           {/*========= Notification =========*/}
-          <button className="relative p-2 hover:bg-white/10 rounded-full transition-colors w-full flex items-center justify-center">
+          <button
+            onClick={() => setIsNotificationOpen?.(true)}
+            className="relative p-2 hover:bg-white/10 rounded-full transition-colors w-10 mx-auto flex items-center justify-center gap-1"
+          >
             <MdNotifications size={24} />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            <span className="absolute top-1 left-7 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
 
           {/*========= User Profile Dropdown =========*/}
@@ -209,7 +220,7 @@ const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-3 p-2 hover:bg-white/10 rounded-lg transition-colors w-full"
             >
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
                 <MdPerson size={24} className="text-[#05396B]" />
               </div>
               <div className="flex-1 text-left">
@@ -265,7 +276,7 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/*========= Collapse Button (Desktop Only) =========*/}
-        <div className="hidden lg:block border-t border-white/10 p-4 flex-shrink-0">
+        <div className="hidden lg:block border-t border-white/10 p-4 shrink-0">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="w-full flex items-center gap-2 px-4 py-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-sm"

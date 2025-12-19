@@ -21,6 +21,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   //========== Sidebar State Management ===========
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   //========== Public Routes (No Navbar/TopBar) ===========
   const publicRoutes = [
@@ -52,12 +53,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         setIsSidebarOpen={setIsSidebarOpen}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
+        isNotificationOpen={isNotificationOpen}
+        setIsNotificationOpen={setIsNotificationOpen}
       />
       <TopBar
         title={pageTitle}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         isCollapsed={isCollapsed}
+        isNotificationOpen={isNotificationOpen}
+        setIsNotificationOpen={setIsNotificationOpen}
       />
       <main
         className={`transition-all duration-300 ${

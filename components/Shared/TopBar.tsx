@@ -12,6 +12,8 @@ import {
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { TopBarProps } from "@/Type/Shared/Shared";
+import { IoSettingsOutline } from "react-icons/io5";
+import NotificationPanel from "./NotificationPanel";
 
 //========== TopBar Component ===========
 const TopBar: React.FC<TopBarProps> = ({
@@ -19,6 +21,8 @@ const TopBar: React.FC<TopBarProps> = ({
   isSidebarOpen,
   setIsSidebarOpen,
   isCollapsed,
+  isNotificationOpen,
+  setIsNotificationOpen,
 }) => {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -46,7 +50,8 @@ const TopBar: React.FC<TopBarProps> = ({
   };
 
   const handleProfile = () => {
-    router.push("/Profile");
+    if (user?.role === "admin") router.push("/Admin/settings");
+    else router.push("/user/settings");
     setIsDropdownOpen(false);
   };
 
@@ -80,15 +85,18 @@ const TopBar: React.FC<TopBarProps> = ({
 
         {/*========= Right Section (Desktop Only) =========*/}
         <div className="hidden lg:flex items-center gap-4">
+          {/*========= Notification Icon =========*/}
+          <button
+            onClick={() => setIsNotificationOpen?.(true)}
+            className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Notifications"
+          >
+            <MdNotifications size={24} className="text-gray-600" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
           {/*========= Help Icon =========*/}
           <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <MdHelpOutline size={24} className="text-gray-600" />
-          </button>
-
-          {/*========= Notification Icon =========*/}
-          <button className="relative p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <MdNotifications size={24} className="text-gray-600" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
 
           {/*========= User Profile Dropdown =========*/}
@@ -123,10 +131,8 @@ const TopBar: React.FC<TopBarProps> = ({
                   onClick={handleProfile}
                   className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors"
                 >
-                  <MdPerson size={20} className="text-gray-600" />
-                  <span className="text-sm text-gray-700">
-                    Profile Settings
-                  </span>
+                  <IoSettingsOutline size={20} className="text-gray-600" />
+                  <span className="text-sm text-gray-700">Settings</span>
                 </button>
                 <hr className="my-2 border-gray-200" />
                 <button
@@ -154,6 +160,12 @@ const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
       </div>
+
+      {/*========= Notification Panel =========*/}
+      <NotificationPanel
+        isOpen={isNotificationOpen ?? false}
+        onClose={() => setIsNotificationOpen?.(false)}
+      />
     </header>
   );
 };

@@ -163,7 +163,7 @@ const Laws = () => {
             placeholder="Search laws, guidelines, and requirements..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-5 py-2"
           />
         </div>
       </Card>
