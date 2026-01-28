@@ -98,6 +98,7 @@ const Login = () => {
                 <p><span className="font-medium">User:</span> user@gmail.com</p>
                 <p><span className="font-medium">Password:</span> 123456</p>
               </div>
+              <p className=" text-xs font-thin italic text-center">** for testing demo only ** <br />  while development completed this section will not be available </p>
             </div>
 
             {/*========= Email Field =========*/}
