@@ -73,11 +73,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       // TODO: Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
+      // Validate password
+      if (password !== "123456") {
+        throw new Error("Invalid credentials");
+      }
+
+      // Determine role based on email
+      let role: "admin" | "user";
+      if (email === "admin@gmail.com") {
+        role = "admin";
+      } else if (email === "user@gmail.com") {
+        role = "user";
+      } else {
+        throw new Error("Invalid credentials");
+      }
+
       const mockUser: User = {
-        id: "1",
+        id: role === "admin" ? "1" : "2",
         email: email,
         name: email.split("@")[0],
-        role: Math.random() > 0.5 ? "admin" : "user",
+        role: role,
       };
 
 

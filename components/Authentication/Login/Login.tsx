@@ -14,7 +14,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const userLoggedIn = localStorage.getItem("accessToken");
 
   //========== React Hook Form Setup ===========
   const {
@@ -26,29 +25,34 @@ const Login = () => {
   //========== Form Submit Handler ===========
   const onSubmit = async (data: loginFormValues) => {
     try {
-      if (userLoggedIn) {
-        toastManager.add({
-          description: "Redirecting to dashboard...",
-          title: "Already logged in",
-          type: "info",
-        });
-
-        setTimeout(() => {
-          toastManager.add({
-            description: "Welcome back to your dashboard",
-            title: "Redirected successfully",
-            type: "success",
-          });
-          window.location.href = "/";
-        }, 2000);
-
-        return;
-      }
       setIsLoading(true);
       setError(null);
+
+      // Show logging in toast
+      toastManager.add({
+        description: "Please wait while we verify your credentials...",
+        title: "Logging in",
+        type: "info",
+      });
+
       await login(data.email, data.password);
+
+      // Show success toast
+      toastManager.add({
+        description: "Welcome back! Redirecting to your dashboard...",
+        title: "Login Successful",
+        type: "success",
+      });
     } catch (err) {
       setError("Invalid email or password. Please try again.");
+      
+      // Show error toast
+      toastManager.add({
+        description: "Please check your credentials and try again.",
+        title: "Login Failed",
+        type: "error",
+      });
+      
       console.error("Login error:", err);
     } finally {
       setIsLoading(false);
@@ -86,6 +90,16 @@ const Login = () => {
 
           {/*========= Login Form =========*/}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {/*========= Demo Credentials Notice =========*/}
+            <div className="p-4 bg-blue-500/20 border border-blue-300/30 rounded-lg text-white text-sm">
+              <p className="font-semibold mb-2 text-blue-100">Demo Credentials:</p>
+              <div className="space-y-1 text-blue-200">
+                <p><span className="font-medium">Admin:</span> admin@gmail.com</p>
+                <p><span className="font-medium">User:</span> user@gmail.com</p>
+                <p><span className="font-medium">Password:</span> 123456</p>
+              </div>
+            </div>
+
             {/*========= Email Field =========*/}
             <div>
               <div className="relative">
