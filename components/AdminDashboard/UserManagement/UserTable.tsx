@@ -1,9 +1,10 @@
 "use client";
 import React, { useState } from "react";
-import { HiOutlineMagnifyingGlass } from "react-icons/hi2";
+import { HiOutlineMagnifyingGlass, HiOutlinePlus } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
 import UserRow from "./UserRow";
-import type { User } from "@/Type/AdminDashboard/UserManagement";
+import AddUserModal from "./AddUserModal";
+import type { User, AddUserFormData } from "@/Type/AdminDashboard/UserManagement";
 import { toastManager } from "@/components/ui/toast";
 
 //========== User Table Component ==========
@@ -11,9 +12,10 @@ const UserTable: React.FC = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
 
   //========== Sample Users Data ==========
-  const users: User[] = [
+  const initialUsers: User[] = [
     {
       id: "1",
       name: "John Smith",
@@ -80,6 +82,44 @@ const UserTable: React.FC = () => {
       joinDate: "2023-08-15",
     },
   ];
+
+  const [users, setUsers] = useState<User[]>(initialUsers);
+
+  //========== Handle Add User ==========
+  const handleAddUser = (userData: AddUserFormData) => {
+    // Generate new user ID
+    const newId = (users.length + 1).toString();
+    
+    // Construct full name from first and last name
+    const fullName = [userData.firstName, userData.lastName]
+      .filter(Boolean)
+      .join(" ") || "New User";
+    
+    // Create new user object matching the User type
+    const newUser: User = {
+      id: newId,
+      name: fullName,
+      email: userData.email,
+      company: userData.businessName || "No Company",
+      projects: 0,
+      status: "pending",
+      lastLogin: "Never",
+      role: "User",
+      department: "General",
+      phone: "",
+      joinDate: new Date().toISOString().split("T")[0],
+    };
+    
+    // Add new user to the list
+    setUsers([newUser, ...users]);
+    
+    // Show success toast
+    toastManager.add({
+      type: "success",
+      title: "User Added",
+      description: `${newUser.name} has been successfully added to the system`,
+    });
+  };
 
   //========== Filter Users ==========
   const filteredUsers = users.filter((user) => {
@@ -159,6 +199,15 @@ const UserTable: React.FC = () => {
           <option value="pending">Pending</option>
           <option value="suspended">Suspended</option>
         </select>
+
+        {/*========== Add User Button ==========*/}
+        <button
+          onClick={() => setIsAddUserModalOpen(true)}
+          className="flex py-3 px-2 border border-gray-200 rounded-lg hover:bg-blue-50 duration-500 bg-white cursor-pointer items-center gap-2"
+        >
+          <HiOutlinePlus size={20} />
+          Add User
+        </button>
       </div>
 
       {/*========== User Table ==========*/}
@@ -213,6 +262,13 @@ const UserTable: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/*========== Add User Modal ==========*/}
+      <AddUserModal
+        isOpen={isAddUserModalOpen}
+        onClose={() => setIsAddUserModalOpen(false)}
+        onAddUser={handleAddUser}
+      />
     </div>
   );
 };

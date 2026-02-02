@@ -76,3 +76,17 @@ export interface UserRowProps {
   onSuspendAccount: (user: User) => void;
   onDeleteUser: (user: User) => void;
 }
+
+export interface AddUserFormData {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  businessName?: string;
+}
+
+export interface AddUserModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAddUser: (userData: AddUserFormData) => void;
+}
