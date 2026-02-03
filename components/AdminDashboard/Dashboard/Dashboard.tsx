@@ -107,20 +107,20 @@ const Dashboard = () => {
       iconColor: "text-purple-600",
     },
     {
+      id: "5",
+      icon: <HiOutlineExclamationCircle size={24} />,
+      title: "Support Inbox",
+      description: "Handle user support requests",
+      href: "/Admin/support",
+      iconColor: "text-blue-600",
+    },
+    {
       id: "4",
       icon: <HiOutlineCog size={24} />,
       title: "Settings",
       description: "Configure system settings",
       href: "/Admin/settings",
       iconColor: "text-gray-600",
-    },
-    {
-      id: "5",
-      icon: <HiOutlineTrendingUp size={24} />,
-      title: "Settings",
-      description: "Configure system settings",
-      href: "/Admin/settings",
-      iconColor: "text-blue-600",
     },
   ];
 
