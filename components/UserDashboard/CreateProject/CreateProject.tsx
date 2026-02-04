@@ -39,6 +39,7 @@ const CreateProjectContent = () => {
   } = useCreateProject();
 
   const [showSuccess, setShowSuccess] = useState(false);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   const methods = useForm<ProjectFormData>({
     defaultValues: formData,
@@ -51,12 +52,20 @@ const CreateProjectContent = () => {
 
   //========================= Handle Step Navigation =========================
   const handleNext = async () => {
+    setAttemptedSubmit(true);
     const isValid = await methods.trigger();
     if (isValid) {
       updateFormData(methods.getValues());
+      setAttemptedSubmit(false);
       if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
         window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } else {
+      // Scroll to first error
+      const firstError = document.querySelector('.border-red-500');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
   };
@@ -77,11 +86,18 @@ const CreateProjectContent = () => {
 
   //========================= Handle Submit =========================
   const handleSubmit = async () => {
+    setAttemptedSubmit(true);
     const isValid = await methods.trigger();
     if (isValid) {
       updateFormData(methods.getValues());
       await submitProject();
       setShowSuccess(true);
+    } else {
+      // Scroll to first error
+      const firstError = document.querySelector('.border-red-500');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
   };
 

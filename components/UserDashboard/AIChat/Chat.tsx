@@ -224,14 +224,15 @@ How can I help you today?`,
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      <button
+      
+      <div className="flex bg-gray-50 flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 overflow-hidden">
+        <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors mb-4"
       >
         <HiOutlineArrowLeft className="w-4 h-4" />
         <span>Back to Dashboard</span>
       </button>
-      <div className="flex bg-gray-50 flex-col max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 overflow-hidden">
         <div className="py-4 space-y-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             AI Compliance Assistant
