@@ -48,11 +48,14 @@ const Q3Section = () => {
             required: "Core activities description is required",
           })}
           className={
-            errors.q3?.coreActivitiesDescription ? "border-red-500" : ""
+            errors.q3?.coreActivitiesDescription
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
           }
         />
         {errors.q3?.coreActivitiesDescription && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.q3.coreActivitiesDescription.message}
           </p>
         )}
@@ -80,10 +83,17 @@ const Q3Section = () => {
           {...register("q3.hypothesis", {
             required: "Hypothesis is required",
           })}
-          className={errors.q3?.hypothesis ? "border-red-500" : ""}
+          className={
+            errors.q3?.hypothesis
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q3?.hypothesis && (
-          <p className="text-xs text-red-500">{errors.q3.hypothesis.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.q3.hypothesis.message}
+          </p>
         )}
       </div>
 
@@ -109,10 +119,15 @@ const Q3Section = () => {
           {...register("q3.uncertainty", {
             required: "Uncertainty description is required",
           })}
-          className={errors.q3?.uncertainty ? "border-red-500" : ""}
+          className={
+            errors.q3?.uncertainty
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q3?.uncertainty && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.q3.uncertainty.message}
           </p>
         )}
@@ -140,10 +155,15 @@ const Q3Section = () => {
           {...register("q3.systematicProgression", {
             required: "Systematic progression description is required",
           })}
-          className={errors.q3?.systematicProgression ? "border-red-500" : ""}
+          className={
+            errors.q3?.systematicProgression
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q3?.systematicProgression && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.q3.systematicProgression.message}
           </p>
         )}
@@ -163,10 +183,17 @@ const Q3Section = () => {
           {...register("q3.outcomes", {
             required: "Outcomes description is required",
           })}
-          className={errors.q3?.outcomes ? "border-red-500" : ""}
+          className={
+            errors.q3?.outcomes
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q3?.outcomes && (
-          <p className="text-xs text-red-500">{errors.q3.outcomes.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.q3.outcomes.message}
+          </p>
         )}
       </div>
 
@@ -192,10 +219,15 @@ const Q3Section = () => {
           {...register("q3.newKnowledge", {
             required: "New knowledge description is required",
           })}
-          className={errors.q3?.newKnowledge ? "border-red-500" : ""}
+          className={
+            errors.q3?.newKnowledge
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q3?.newKnowledge && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.q3.newKnowledge.message}
           </p>
         )}

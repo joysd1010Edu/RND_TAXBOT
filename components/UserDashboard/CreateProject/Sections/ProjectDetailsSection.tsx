@@ -35,10 +35,17 @@ const ProjectDetailsSection = () => {
           {...register("projectTitle", {
             required: "Project title is required",
           })}
-          className={errors.projectTitle ? "border-red-500" : ""}
+          className={
+            errors.projectTitle
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.projectTitle && (
-          <p className="text-xs text-red-500">{errors.projectTitle.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.projectTitle.message}
+          </p>
         )}
       </div>
 
@@ -54,10 +61,17 @@ const ProjectDetailsSection = () => {
           {...register("briefSummary", {
             required: "Brief summary is required",
           })}
-          className={errors.briefSummary ? "border-red-500" : ""}
+          className={
+            errors.briefSummary
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.briefSummary && (
-          <p className="text-xs text-red-500">{errors.briefSummary.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.briefSummary.message}
+          </p>
         )}
       </div>
 
@@ -72,10 +86,17 @@ const ProjectDetailsSection = () => {
           {...register("financialYear", {
             required: "Financial year is required",
           })}
-          className={errors.financialYear ? "border-red-500" : ""}
+          className={
+            errors.financialYear
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.financialYear && (
-          <p className="text-xs text-red-500">{errors.financialYear.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.financialYear.message}
+          </p>
         )}
       </div>
 
@@ -90,10 +111,15 @@ const ProjectDetailsSection = () => {
           {...register("projectStartDate", {
             required: "Project start date is required",
           })}
-          className={errors.projectStartDate ? "border-red-500" : ""}
+          className={
+            errors.projectStartDate
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.projectStartDate && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.projectStartDate.message}
           </p>
         )}
@@ -110,10 +136,15 @@ const ProjectDetailsSection = () => {
           {...register("projectEndDate", {
             required: "Project end date is required",
           })}
-          className={errors.projectEndDate ? "border-red-500" : ""}
+          className={
+            errors.projectEndDate
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.projectEndDate && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.projectEndDate.message}
           </p>
         )}
@@ -130,10 +161,17 @@ const ProjectDetailsSection = () => {
           {...register("industry", {
             required: "Industry is required",
           })}
-          className={errors.industry ? "border-red-500" : ""}
+          className={
+            errors.industry
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.industry && (
-          <p className="text-xs text-red-500">{errors.industry.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.industry.message}
+          </p>
         )}
       </div>
 
@@ -149,10 +187,17 @@ const ProjectDetailsSection = () => {
           {...register("staffMembers", {
             required: "Staff members are required",
           })}
-          className={errors.staffMembers ? "border-red-500" : ""}
+          className={
+            errors.staffMembers
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.staffMembers && (
-          <p className="text-xs text-red-500">{errors.staffMembers.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.staffMembers.message}
+          </p>
         )}
       </div>
     </div>

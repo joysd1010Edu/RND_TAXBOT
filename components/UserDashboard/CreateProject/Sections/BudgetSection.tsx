@@ -39,10 +39,15 @@ const BudgetSection = () => {
             required: "Total expenditure is required",
             min: { value: 0, message: "Must be a positive number" },
           })}
-          className={errors.totalExpenditure ? "border-red-500" : ""}
+          className={
+            errors.totalExpenditure
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.totalExpenditure && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.totalExpenditure.message}
           </p>
         )}
@@ -71,10 +76,17 @@ const BudgetSection = () => {
             required: "Staff costs are required",
             min: { value: 0, message: "Must be a positive number" },
           })}
-          className={errors.staffCosts ? "border-red-500" : ""}
+          className={
+            errors.staffCosts
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.staffCosts && (
-          <p className="text-xs text-red-500">{errors.staffCosts.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.staffCosts.message}
+          </p>
         )}
       </div>
 
@@ -90,10 +102,15 @@ const BudgetSection = () => {
           {...register("contractorCosts", {
             min: { value: 0, message: "Must be a positive number" },
           })}
-          className={errors.contractorCosts ? "border-red-500" : ""}
+          className={
+            errors.contractorCosts
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.contractorCosts && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.contractorCosts.message}
           </p>
         )}
@@ -113,10 +130,15 @@ const BudgetSection = () => {
           {...register("materialsConsumables", {
             min: { value: 0, message: "Must be a positive number" },
           })}
-          className={errors.materialsConsumables ? "border-red-500" : ""}
+          className={
+            errors.materialsConsumables
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.materialsConsumables && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.materialsConsumables.message}
           </p>
         )}
@@ -136,10 +158,15 @@ const BudgetSection = () => {
           {...register("equipmentDepreciation", {
             min: { value: 0, message: "Must be a positive number" },
           })}
-          className={errors.equipmentDepreciation ? "border-red-500" : ""}
+          className={
+            errors.equipmentDepreciation
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.equipmentDepreciation && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.equipmentDepreciation.message}
           </p>
         )}
@@ -165,10 +192,15 @@ const BudgetSection = () => {
           {...register("otherEligibleCosts", {
             min: { value: 0, message: "Must be a positive number" },
           })}
-          className={errors.otherEligibleCosts ? "border-red-500" : ""}
+          className={
+            errors.otherEligibleCosts
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.otherEligibleCosts && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.otherEligibleCosts.message}
           </p>
         )}

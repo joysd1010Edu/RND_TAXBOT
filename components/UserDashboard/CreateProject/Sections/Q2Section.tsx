@@ -48,11 +48,14 @@ const Q2Section = () => {
             required: "Core activities description is required",
           })}
           className={
-            errors.q2?.coreActivitiesDescription ? "border-red-500" : ""
+            errors.q2?.coreActivitiesDescription
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
           }
         />
         {errors.q2?.coreActivitiesDescription && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.q2.coreActivitiesDescription.message}
           </p>
         )}
@@ -80,10 +83,17 @@ const Q2Section = () => {
           {...register("q2.hypothesis", {
             required: "Hypothesis is required",
           })}
-          className={errors.q2?.hypothesis ? "border-red-500" : ""}
+          className={
+            errors.q2?.hypothesis
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q2?.hypothesis && (
-          <p className="text-xs text-red-500">{errors.q2.hypothesis.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.q2.hypothesis.message}
+          </p>
         )}
       </div>
 
@@ -109,10 +119,15 @@ const Q2Section = () => {
           {...register("q2.uncertainty", {
             required: "Uncertainty description is required",
           })}
-          className={errors.q2?.uncertainty ? "border-red-500" : ""}
+          className={
+            errors.q2?.uncertainty
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q2?.uncertainty && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.q2.uncertainty.message}
           </p>
         )}
@@ -140,10 +155,15 @@ const Q2Section = () => {
           {...register("q2.systematicProgression", {
             required: "Systematic progression description is required",
           })}
-          className={errors.q2?.systematicProgression ? "border-red-500" : ""}
+          className={
+            errors.q2?.systematicProgression
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q2?.systematicProgression && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.q2.systematicProgression.message}
           </p>
         )}
@@ -163,10 +183,17 @@ const Q2Section = () => {
           {...register("q2.outcomes", {
             required: "Outcomes description is required",
           })}
-          className={errors.q2?.outcomes ? "border-red-500" : ""}
+          className={
+            errors.q2?.outcomes
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q2?.outcomes && (
-          <p className="text-xs text-red-500">{errors.q2.outcomes.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
+            {errors.q2.outcomes.message}
+          </p>
         )}
       </div>
 
@@ -192,10 +219,15 @@ const Q2Section = () => {
           {...register("q2.newKnowledge", {
             required: "New knowledge description is required",
           })}
-          className={errors.q2?.newKnowledge ? "border-red-500" : ""}
+          className={
+            errors.q2?.newKnowledge
+              ? "border-red-500 border-2 bg-red-50 dark:bg-red-950/20 focus:border-red-500 focus:ring-red-500"
+              : ""
+          }
         />
         {errors.q2?.newKnowledge && (
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-red-600 dark:text-red-400 font-medium flex items-center gap-1">
+            <span>⚠</span>
             {errors.q2.newKnowledge.message}
           </p>
         )}
