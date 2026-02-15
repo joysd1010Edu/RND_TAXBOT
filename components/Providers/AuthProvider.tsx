@@ -13,6 +13,7 @@ import type {
   User,
   AuthState,
 } from "@/Type/Authentication/Login";
+import { useAxios } from "@/Hooks/useAxiosInstance";
 
 //========== Auth Context ===========
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +23,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const router = useRouter();
-
+  const axios=useAxios()
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
@@ -68,53 +69,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const login = async (email: string, password: string) => {
     try {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
+      const response = await axios.post("/users/login/", { email, password });
 
-      //========== Temporary Mock Implementation ===========
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Validate password
-      if (password !== "123456") {
-        throw new Error("Invalid credentials");
+      if (response.status !== 200) {
+       console.log(response)
       }
-
-      // Determine role based on email
-      let role: "admin" | "user";
-      if (email === "admin@gmail.com") {
-        role = "admin";
-      } else if (email === "user@gmail.com") {
-        role = "user";
-      } else {
-        throw new Error("Invalid credentials");
-      }
-
-      const mockUser: User = {
-        id: role === "admin" ? "1" : "2",
-        email: email,
-        name: email.split("@")[0],
-        role: role,
-      };
-
-
+      const signedUserData: User = response.data.user
       const storage = localStorage;
-      storage.setItem("user", JSON.stringify(mockUser));
+      storage.setItem("user", JSON.stringify(signedUserData));
       storage.setItem("accessToken", "mock-access-token");
       storage.setItem("refreshToken", "mock-refresh-token");
 
       //========== Set Cookies for Middleware ===========
       document.cookie = `accessToken=mock-access-token; path=/; SameSite=Lax`;
       document.cookie = `userData=${encodeURIComponent(
-        JSON.stringify(mockUser)
+        JSON.stringify(signedUserData),
       )}; path=/; SameSite=Lax`;
 
       setAuthState({
-        user: mockUser,
+        user: signedUserData,
         isAuthenticated: true,
         isLoading: false,
       });
 
       //========== Redirect Based on Role ===========
-      if (mockUser.role === "admin") {
+      if (signedUserData.role === "admin") {
         router.push("/Admin/Dashboard");
       } else {
         router.push("/user/UserDashboard");

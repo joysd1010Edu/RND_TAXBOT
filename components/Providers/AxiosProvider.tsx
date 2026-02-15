@@ -22,7 +22,8 @@ interface ExtendedInternalAxiosRequestConfig
 //========== Axios Provider Component ===========
 export const AxiosProvider: React.FC<AxiosProviderProps> = ({
   children,
-  baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api",
+  baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ||
+    "https://c661-103-159-73-161.ngrok-free.app/api/",
 }) => {
   //========== Track document visibility ===========
   const isTabActiveRef = React.useRef(true);
@@ -76,7 +77,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
         console.log(
           `API Request: ${config.method?.toUpperCase()} ${config.baseURL}${
             config.url
-          }`
+          }`,
         );
       }
 
@@ -85,7 +86,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
     (error) => {
       console.error("Request Error:", error);
       return Promise.reject(error);
-    }
+    },
   );
 
   //========== Response Interceptor ===========
@@ -95,7 +96,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
         console.log(
           `API Response: ${response.config.method?.toUpperCase()} ${
             response.config.url
-          } - Status: ${response.status}`
+          } - Status: ${response.status}`,
         );
       }
       return response;
@@ -120,7 +121,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
         console.error(
           `API Error: ${error.config?.method?.toUpperCase()} ${
             error.config?.url
-          } - Status: ${error.response.status}`
+          } - Status: ${error.response.status}`,
         );
 
         //========== Handle 401 Unauthorized ===========
@@ -170,7 +171,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
               {
                 timeout: 5000,
                 headers: { "Content-Type": "application/json" },
-              }
+              },
             );
 
             if (response.status === 200 && response.data.accessToken) {
@@ -211,7 +212,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 
   return (

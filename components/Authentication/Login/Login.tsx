@@ -45,14 +45,14 @@ const Login = () => {
       });
     } catch (err) {
       setError("Invalid email or password. Please try again.");
-      
+
       // Show error toast
       toastManager.add({
         description: "Please check your credentials and try again.",
         title: "Login Failed",
         type: "error",
       });
-      
+
       console.error("Login error:", err);
     } finally {
       setIsLoading(false);
@@ -62,25 +62,25 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/*========= Left Side - Logo =========*/}
-      <div className="w-full h-[50vh] sm:h-auto md:w-1/2 bg-white flex items-center justify-center p-8 md:p-16">
+      <div className="w-full shrink-0 md:shrink md:w-1/2 bg-white flex items-center justify-center py-8 px-6 sm:p-8 md:p-16">
         <div className="w-full max-w-md">
           <Image
             src="/logo.png"
             alt="PATTENS Logo"
             width={300}
             height={200}
-            className="w-64 md:w-80 mx-auto"
+            className="w-40 sm:w-64 md:w-80 mx-auto"
             priority
           />
         </div>
       </div>
 
       {/*========= Right Side - Login Form =========*/}
-      <div className="w-full h-[50vh] sm:h-auto md:w-1/2 bg-linear-to-b from-[#064D8F] to-[#05396B] flex items-center justify-center p-8 md:p-16">
+      <div className="w-full flex-1 md:w-1/2 bg-linear-to-b from-[#064D8F] to-[#05396B] flex items-center justify-center px-4 py-6 sm:p-8 md:p-16">
         <div className="w-full max-w-md">
           {/*========= Welcome Header =========*/}
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+          <div className="mb-4 sm:mb-8 text-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
               Welcome to <span className="text-orange-400 italic">PATTENS</span>
             </h1>
             <p className="text-blue-200 text-sm md:text-base">
@@ -89,16 +89,31 @@ const Login = () => {
           </div>
 
           {/*========= Login Form =========*/}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4 sm:space-y-5"
+          >
             {/*========= Demo Credentials Notice =========*/}
             <div className="p-4 bg-blue-500/20 border border-blue-300/30 rounded-lg text-white text-sm">
-              <p className="font-semibold mb-2 text-blue-100">Demo Credentials:</p>
+              <p className="font-semibold mb-2 text-blue-100">
+                Demo Credentials:
+              </p>
               <div className="space-y-1 text-blue-200">
-                <p><span className="font-medium">Admin:</span> admin@gmail.com</p>
-                <p><span className="font-medium">User:</span> user@gmail.com</p>
-                <p><span className="font-medium">Password:</span> 123456</p>
+                <p>
+                  <span className="font-medium">Admin:</span> admin@admin.com
+                </p>
+                <p>
+                  <span className="font-medium">User:</span> user@gmail.com
+                </p>
+                <p>
+                  <span className="font-medium">Password:</span> admin (for
+                  admin user)
+                </p>
               </div>
-              <p className=" text-xs font-thin italic text-center">** for testing demo only ** <br />  while development completed this section will not be available </p>
+              <p className=" text-xs font-thin italic text-center">
+                ** for testing demo only ** <br /> while development completed
+                this section will not be available{" "}
+              </p>
             </div>
 
             {/*========= Email Field =========*/}
