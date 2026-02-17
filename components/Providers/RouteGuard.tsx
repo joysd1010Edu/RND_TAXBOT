@@ -10,7 +10,7 @@ export const RouteGuard: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   //========== Public Routes Configuration ===========
   const publicRoutes = ["/Login", "/Forgot"];
@@ -21,15 +21,23 @@ export const RouteGuard: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     //========== Authentication Check ===========
     if (!isLoading) {
+      //========== Redirect to login if not authenticated ===========
       if (!isAuthenticated && !isPublicRoute && pathname !== "/") {
         router.push(`/Login?redirect=${pathname}`);
+        return;
       }
 
+      //========== Redirect root path to appropriate dashboard ===========
       if (isAuthenticated && pathname === "/") {
-        router.push("/Admin/Dashboard");
+        if (user?.role === "admin") {
+          router.push("/Admin/Dashboard");
+        } else {
+          router.push("/user/UserDashboard");
+        }
+        return;
       }
     }
-  }, [isAuthenticated, isLoading, isPublicRoute, pathname, router]);
+  }, [isAuthenticated, isLoading, isPublicRoute, pathname, router, user?.role]);
 
   //========== Show Loading State ===========
   if (isLoading) {

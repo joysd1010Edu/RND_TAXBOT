@@ -26,12 +26,13 @@ export function middleware(request: NextRequest) {
   }
 
   //========== Prevent Users with Role 'user' from Accessing Admin Pages ===========
-  if (pathname.startsWith("/Admin") && userRole !== "admin") {
-    return NextResponse.redirect(new URL("/403", request.url)); // Redirect to 403 page or any other page you prefer
+  if (pathname.startsWith("/Admin") && accessToken && userRole !== "admin") {
+    return NextResponse.redirect(new URL("/403", request.url));
   }
+  
   //========== Prevent Users with Role 'admin' from Accessing user Pages ===========
-  if (pathname.startsWith("/user") && userRole !== "user") {
-    return NextResponse.redirect(new URL("/403", request.url)); // Redirect to 403 page or any other page you prefer
+  if (pathname.startsWith("/user") && accessToken && userRole !== "user") {
+    return NextResponse.redirect(new URL("/403", request.url));
   }
 
   //========== Redirect Authenticated Users Away from Public Routes ===========
