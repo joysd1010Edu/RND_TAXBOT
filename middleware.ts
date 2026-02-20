@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
   //========== Public Routes (No Authentication Required) ===========
   const publicRoutes = ["/Login", "/Forgot"];
   const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   //========== Check for Authentication Token and User Data ===========
@@ -19,15 +19,19 @@ export function middleware(request: NextRequest) {
   if (userDataCookie) {
     try {
       const userData = JSON.parse(decodeURIComponent(userDataCookie));
-      userRole = userData.role;
+      userRole = userData.role?.toLowerCase() || null;
     } catch (error) {
       console.error("Error parsing user data cookie:", error);
     }
   }
 
   //========== Prevent Users with Role 'user' from Accessing Admin Pages ===========
-  if (pathname.startsWith("/Admin") && userRole !== "admin") {
-    return NextResponse.redirect(new URL("/403", request.url)); // Redirect to 403 page or any other page you prefer
+  const allowedRoles = ["admin", "superadmin"];
+  if (
+    pathname.startsWith("/Admin") &&
+    (!userRole || !allowedRoles.includes(userRole))
+  ) {
+    return NextResponse.redirect(new URL("/403", request.url));
   }
   //========== Prevent Users with Role 'admin' from Accessing user Pages ===========
   if (pathname.startsWith("/user") && userRole !== "user") {
@@ -36,7 +40,7 @@ export function middleware(request: NextRequest) {
 
   //========== Redirect Authenticated Users Away from Public Routes ===========
   if (isPublicRoute && accessToken) {
-    if (userRole === "admin") {
+    if (userRole === "admin" || userRole === "superadmin") {
       return NextResponse.redirect(new URL("/Admin/Dashboard", request.url));
     } else {
       return NextResponse.redirect(new URL("/user/UserDashboard", request.url));
@@ -52,7 +56,7 @@ export function middleware(request: NextRequest) {
 
   //========== Redirect Root to Appropriate Dashboard ===========
   if (pathname === "/" && accessToken) {
-    if (userRole === "admin") {
+    if (userRole === "admin" || userRole === "superadmin") {
       return NextResponse.redirect(new URL("/Admin/Dashboard", request.url));
     } else {
       return NextResponse.redirect(new URL("/user/UserDashboard", request.url));

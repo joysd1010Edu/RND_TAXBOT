@@ -4,11 +4,15 @@ import { useRouter } from "next/navigation";
 import { MdArrowBack } from "react-icons/md";
 import { useEffect } from "react";
 import { useErrorPage } from "@/components/Providers/ErrorPageProvider";
+import { useAuth } from "@/components/Providers/AuthProvider";
 
 //========== 403 Forbidden Page ===========
 const ForbiddenPage = () => {
   const router = useRouter();
   const { setIsErrorPage } = useErrorPage();
+  const auth=useAuth()
+  const user=auth.user
+  console.log("User in 403 page:", user?.role?.toLowerCase());
 
   useEffect(() => {
     setIsErrorPage(true);

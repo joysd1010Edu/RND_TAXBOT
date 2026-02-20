@@ -28,7 +28,7 @@ interface NavItem {
 }
 
 interface NavbarProps {
-  userRole?: "admin" | "user";
+  userRole?: "superadmin" | "admin" | "user";
   isSidebarOpen: boolean;
   setIsSidebarOpen: (value: boolean) => void;
   isCollapsed: boolean;
@@ -111,7 +111,7 @@ const Navbar: React.FC<NavbarProps> = ({
     },
   ];
 
-  const navItems = userRole === "admin" ? adminNavItems : userNavItems;
+  const navItems = userRole === "admin" ? adminNavItems : userRole === "superadmin" ? adminNavItems : userNavItems;
 
   //========== Close Dropdown on Outside Click ===========
   useEffect(() => {

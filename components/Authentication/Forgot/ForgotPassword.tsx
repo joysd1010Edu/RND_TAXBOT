@@ -11,16 +11,19 @@ import Image from "next/image";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { BsCheckCircle } from "react-icons/bs";
 import { useRouter } from "next/navigation";
+import { useAxios } from "@/Hooks/useAxiosInstance";
 
 //========== Forgot Password Component ===========
 const ForgotPassword = () => {
   const router = useRouter();
+  const axios=useAxios()
   const [step, setStep] = useState<"email" | "verify" | "reset" | "success">(
     "email"
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
+  const [combinedVerificationCode, setCombinedVerificationCode] = useState("");
   const [verificationCode, setVerificationCode] = useState(["", "", "", ""]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -42,9 +45,14 @@ const ForgotPassword = () => {
       setIsLoading(true);
       setError(null);
 
-      //========== Temporary Mock Implementation ===========
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await axios.post("/users/forget-password/", {
+        email: data.email,
+      });
+
+      if (response.status !== 200) {
+        throw new Error("Failed to send verification code");
+      }
+      console.log("Verification code sent to email:", response.data);
 
       setEmail(data.email);
       setStep("verify");
@@ -85,16 +93,14 @@ const ForgotPassword = () => {
       setError(null);
 
       const code = verificationCode.join("");
+      console.log("Entered verification code:", code);
       if (code.length !== 4) {
         setError("Please enter all 4 digits");
         setIsLoading(false);
         return;
       }
 
-      //========== Temporary Mock Implementation ===========
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      setCombinedVerificationCode(code);
       setStep("reset");
     } catch (err) {
       setError("Invalid verification code. Please try again.");
@@ -116,13 +122,25 @@ const ForgotPassword = () => {
         return;
       }
 
-      //========== Temporary Mock Implementation ===========
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await axios.post("/users/reset-password/", {
+        email,
+        otp_code: combinedVerificationCode,
+        new_password: data.password,
+        confirm_password: data.confirmPassword,
+      });
 
+      if (response.status !== 200) {
+        throw new Error("Failed to reset password");
+      }
+
+      console.log("Password reset successful:", response.data);
       setStep("success");
-    } catch (err) {
-      setError("Failed to reset password. Please try again.");
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.detail ||
+        "Failed to reset password. Please try again.";
+      setError(message);
       console.error("Reset password error:", err);
     } finally {
       setIsLoading(false);
@@ -131,7 +149,7 @@ const ForgotPassword = () => {
 
   //========== Timer for Resend ===========
   const startTimer = () => {
-    setTimer(30);
+    setTimer(60);
     const interval = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
@@ -150,9 +168,7 @@ const ForgotPassword = () => {
       setIsLoading(true);
       setError(null);
 
-      //========== Temporary Mock Implementation ===========
-      // TODO: Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await axios.post("/users/forget-password/", { email });
 
       setVerificationCode(["", "", "", ""]);
       inputRefs[0].current?.focus();

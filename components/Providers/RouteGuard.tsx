@@ -15,7 +15,7 @@ export const RouteGuard: React.FC<{ children: React.ReactNode }> = ({
   //========== Public Routes Configuration ===========
   const publicRoutes = ["/Login", "/Forgot"];
   const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
   useEffect(() => {
@@ -26,7 +26,8 @@ export const RouteGuard: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (isAuthenticated && pathname === "/") {
-        router.push("/Admin/Dashboard");
+        // RouteGuard redirect handled by middleware
+        router.push("/");
       }
     }
   }, [isAuthenticated, isLoading, isPublicRoute, pathname, router]);

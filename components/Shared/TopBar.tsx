@@ -50,7 +50,7 @@ const TopBar: React.FC<TopBarProps> = ({
   };
 
   const handleProfile = () => {
-    if (user?.role === "admin") router.push("/Admin/settings");
+    if (user?.role === "admin" || user?.role?.toLowerCase() === "superadmin") router.push("/Admin/settings");
     else router.push("/user/settings");
     setIsDropdownOpen(false);
   };

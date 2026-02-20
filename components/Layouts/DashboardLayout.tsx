@@ -38,7 +38,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     isErrorPage;
 
   //========== Determine User Role ===========
-  const userRole = user?.role === "admin" ? "admin" : "user";
+  const normalizedRole = user?.role?.toLowerCase();
+  const userRole: "admin" | "superadmin" | "user" =
+    normalizedRole === "admin"
+      ? "admin"
+      : normalizedRole === "superadmin"
+        ? "superadmin"
+        : "user";
   const { pageTitle } = usePageTitle();
 
   if (isPublicRoute) {

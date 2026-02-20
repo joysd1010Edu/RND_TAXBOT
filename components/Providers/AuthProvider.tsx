@@ -68,17 +68,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   //========== Login Function ===========
   const login = async (email: string, password: string) => {
     try {
+      console.log("email and pass:", email, password);
       setAuthState((prev) => ({ ...prev, isLoading: true }));
       const response = await axios.post("/users/login/", { email, password });
-
+     
       if (response.status !== 200) {
        console.log(response)
       }
+      console.log("Login response:", response);
       const signedUserData: User = response.data.user
       const storage = localStorage;
+      const access_token = response.data.tokens.access;
+      const refresh_token = response.data.tokens.refresh;
       storage.setItem("user", JSON.stringify(signedUserData));
-      storage.setItem("accessToken", "mock-access-token");
-      storage.setItem("refreshToken", "mock-refresh-token");
+      storage.setItem("accessToken", access_token);
+      storage.setItem("refreshToken", refresh_token);
 
       //========== Set Cookies for Middleware ===========
       document.cookie = `accessToken=mock-access-token; path=/; SameSite=Lax`;
@@ -93,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       //========== Redirect Based on Role ===========
-      if (signedUserData.role === "admin") {
+      if (signedUserData.role?.toLowerCase() === "admin"||signedUserData.role?.toLowerCase() === "superadmin") {
         router.push("/Admin/Dashboard");
       } else {
         router.push("/user/UserDashboard");
