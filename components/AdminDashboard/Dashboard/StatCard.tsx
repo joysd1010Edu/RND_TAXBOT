@@ -7,8 +7,6 @@ const StatCard: React.FC<StatCardProps> = ({
   icon,
   value,
   label,
-  change,
-  changeType,
   bgColor,
   iconBgColor,
 }) => {
@@ -17,13 +15,7 @@ const StatCard: React.FC<StatCardProps> = ({
       {/*========== Header with Icon and Change ==========*/}
       <div className="flex items-start justify-between mb-4">
         <div className={`${iconBgColor} p-3 rounded-lg`}>{icon}</div>
-        <span
-          className={`text-sm font-semibold ${
-            changeType === "positive" ? "text-green-600" : "text-red-600"
-          }`}
-        >
-          {change}
-        </span>
+        
       </div>
 
       {/*========== Value and Label ==========*/}

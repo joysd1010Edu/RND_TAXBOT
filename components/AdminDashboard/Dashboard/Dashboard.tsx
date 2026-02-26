@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import {
   HiOutlineUsers,
   HiOutlineFolder,
@@ -13,37 +12,69 @@ import {
 import StatCard from "./StatCard";
 import QuickActionCard from "./QuickActionCard";
 import ActivityItem from "./ActivityItem";
+import { useAxios } from "@/Hooks/useAxiosInstance";
+import { useEffect, useState } from "react";
+import { toastManager } from "@/components/ui/toast";
 
 //========== Admin Dashboard Component ==========
 const Dashboard = () => {
   //========== Stats Data ==========
+  const axios = useAxios();
+  const [Statistics, setStats] = useState({
+    totalUsers: 0,
+    active_projects: 0,
+    pendingReviews: 0,
+    inactive_users: 0,
+    active_users: 0,
+    completed_projects: 0,
+  });
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get("calculations/admin_dashboard/");
+        const data = {
+          totalUsers: response.data.data.total_users,
+          active_projects: response.data.data.active_projects,
+          pendingReviews: response.data.data.pending_projects,
+          inactive_users: response.data.data.inactive_users,
+          active_users: response.data.data.active_users,
+          completed_projects: response.data.data.completed_projects,
+        };
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        toastManager.add({
+          title: "Error",
+          description:
+            "Failed to load dashboard statistics. Please try again later.",
+        });
+      }
+    };
+    fetchStats();
+  }, []);
+
   const stats = [
     {
       id: "1",
       icon: <HiOutlineUsers size={24} className="text-blue-600" />,
-      value: 248,
+      value: Statistics?.totalUsers||0,
       label: "Total Users",
-      change: "+12%",
-      changeType: "positive" as const,
       bgColor: "bg-blue-50",
       iconBgColor: "bg-white",
     },
     {
       id: "2",
       icon: <HiOutlineFolder size={24} className="text-green-600" />,
-      value: 47,
+      value: Statistics?.active_projects || 0,
       label: "Active Projects",
-      change: "+8%",
-      changeType: "positive" as const,
       bgColor: "bg-green-50",
       iconBgColor: "bg-white",
     },
     {
       id: "3",
       icon: <HiOutlineClock size={24} className="text-orange-600" />,
-      value: 15,
+      value: Statistics?.pendingReviews || 0,
       label: "Pending Reviews",
-      change: "-3%",
       changeType: "negative" as const,
       bgColor: "bg-orange-50",
       iconBgColor: "bg-white",
@@ -51,30 +82,24 @@ const Dashboard = () => {
     {
       id: "4",
       icon: <HiOutlineExclamationCircle size={24} className="text-red-600" />,
-      value: 22,
-      label: "Overdue Clarifications",
-      change: "+5%",
-      changeType: "positive" as const,
+      value: Statistics?.inactive_users || 0,
+      label: "Inactive Users",
       bgColor: "bg-red-50",
       iconBgColor: "bg-white",
     },
     {
       id: "5",
       icon: <HiOutlineDocumentText size={24} className="text-purple-600" />,
-      value: 156,
-      label: "Generated Reports",
-      change: "+18%",
-      changeType: "positive" as const,
+      value: Statistics?.active_users || 0,
+      label: "Active Users",
       bgColor: "bg-purple-50",
       iconBgColor: "bg-white",
     },
     {
       id: "6",
       icon: <HiOutlineTrendingUp size={24} className="text-blue-600" />,
-      value: "84%",
-      label: "User Engagement Rate",
-      change: "+4%",
-      changeType: "positive" as const,
+      value: `${Statistics?.completed_projects || 0}`,
+      label: "Completed Projects",
       bgColor: "bg-blue-50",
       iconBgColor: "bg-white",
     },
@@ -97,23 +122,7 @@ const Dashboard = () => {
       description: "Review and approve projects",
       href: "/Admin/projectManagement",
       iconColor: "text-green-600",
-    },
-    {
-      id: "3",
-      icon: <HiOutlineChatBubbleLeftRight size={24} />,
-      title: "Support Inbox",
-      description: "Handle user support requests",
-      href: "/Admin/support",
-      iconColor: "text-purple-600",
-    },
-    {
-      id: "5",
-      icon: <HiOutlineExclamationCircle size={24} />,
-      title: "Support Inbox",
-      description: "Handle user support requests",
-      href: "/Admin/support",
-      iconColor: "text-blue-600",
-    },
+    },    
     {
       id: "4",
       icon: <HiOutlineCog size={24} />,
@@ -162,7 +171,6 @@ const Dashboard = () => {
       timestamp: "3 hours ago",
     },
   ];
-
   return (
     <div className="space-y-8  mx-auto py-4 md:px-20 sm:p-6 ">
       {/*========== Welcome Section ==========*/}
@@ -183,8 +191,6 @@ const Dashboard = () => {
             icon={stat.icon}
             value={stat.value}
             label={stat.label}
-            change={stat.change}
-            changeType={stat.changeType}
             bgColor={stat.bgColor}
             iconBgColor={stat.iconBgColor}
           />

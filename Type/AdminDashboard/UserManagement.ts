@@ -1,15 +1,26 @@
 export interface User {
-  id: string;
-  name: string;
+  id?: number;
   email: string;
-  company: string;
-  projects: number;
-  status: "active" | "pending" | "suspended";
-  lastLogin: string;
-  role?: string;
-  department?: string;
-  phone?: string;
-  joinDate?: string;
+  full_name: string;
+  company: string | null;
+  company_size: string | null;
+  abn: string | null;
+  city: string | null;
+  state: string | null;
+  post_code: string | null;
+  street_address: string | null;
+  phone: string | null;
+  website: string | null;
+  industry: string | null;
+  fiscal_year_end: string | null;
+  role: string;
+  is_active: boolean;
+  is_staff: boolean;
+  is_superuser: boolean;
+  is_suspended: boolean;
+  date_joined: string;
+  last_login: string;
+  projects?: number;
 }
 
 export interface UserProject {
@@ -38,7 +49,7 @@ export interface SupportMessage {
 
 export interface UserTableProps {
   users: User[];
-  onViewProfile: (userId: string) => void;
+  onViewProfile: (userId: number) => void;
   onSendEmail: (user: User) => void;
   onResetPassword: (user: User) => void;
   onSuspendAccount: (user: User) => void;
@@ -70,7 +81,7 @@ export interface SupportMessageItemProps {
 
 export interface UserRowProps {
   user: User;
-  onViewProfile: (userId: string) => void;
+  onViewProfile: (userId: number) => void;
   onSendEmail: (user: User) => void;
   onResetPassword: (user: User) => void;
   onSuspendAccount: (user: User) => void;
@@ -79,10 +90,9 @@ export interface UserRowProps {
 
 export interface AddUserFormData {
   email: string;
+  full_name: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
-  businessName?: string;
+  confirm_password: string;
 }
 
 export interface AddUserModalProps {

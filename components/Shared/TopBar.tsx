@@ -94,10 +94,7 @@ const TopBar: React.FC<TopBarProps> = ({
             <MdNotifications size={24} className="text-gray-600" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
-          {/*========= Help Icon =========*/}
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <MdHelpOutline size={24} className="text-gray-600" />
-          </button>
+        
 
           {/*========= User Profile Dropdown =========*/}
           <div className="relative" ref={dropdownRef}>

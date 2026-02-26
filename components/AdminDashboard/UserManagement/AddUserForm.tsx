@@ -45,6 +45,25 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onSubmit, onCancel }) => {
         )}
       </div>
 
+      {/*========== Full Name Field (Required) ==========*/}
+      <div className="space-y-2">
+        <Label htmlFor="full_name">
+          Full Name <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="full_name"
+          type="text"
+          placeholder="John Doe"
+          {...register("full_name", {
+            required: "Full name is required",
+          })}
+          aria-invalid={errors.full_name ? "true" : "false"}
+        />
+        {errors.full_name && (
+          <p className="text-sm text-red-500">{errors.full_name.message}</p>
+        )}
+      </div>
+
       {/*========== Password Field (Required) ==========*/}
       <div className="space-y-2">
         <Label htmlFor="password">
@@ -68,37 +87,25 @@ const AddUserForm: React.FC<AddUserFormProps> = ({ onSubmit, onCancel }) => {
         )}
       </div>
 
-      {/*========== First Name Field (Optional) ==========*/}
+      {/*========== Confirm Password Field (Required) ==========*/}
       <div className="space-y-2">
-        <Label htmlFor="firstName">First Name</Label>
+        <Label htmlFor="confirm_password">
+          Confirm Password <span className="text-red-500">*</span>
+        </Label>
         <Input
-          id="firstName"
-          type="text"
-          placeholder="John"
-          {...register("firstName")}
+          id="confirm_password"
+          type="password"
+          placeholder="Confirm password"
+          {...register("confirm_password", {
+            required: "Confirm password is required",
+          })}
+          aria-invalid={errors.confirm_password ? "true" : "false"}
         />
-      </div>
-
-      {/*========== Last Name Field (Optional) ==========*/}
-      <div className="space-y-2">
-        <Label htmlFor="lastName">Last Name</Label>
-        <Input
-          id="lastName"
-          type="text"
-          placeholder="Doe"
-          {...register("lastName")}
-        />
-      </div>
-
-      {/*========== Business Name Field (Optional) ==========*/}
-      <div className="space-y-2">
-        <Label htmlFor="businessName">Business Name</Label>
-        <Input
-          id="businessName"
-          type="text"
-          placeholder="Company Inc"
-          {...register("businessName")}
-        />
+        {errors.confirm_password && (
+          <p className="text-sm text-red-500">
+            {errors.confirm_password.message}
+          </p>
+        )}
       </div>
 
       {/*========== Form Actions ==========*/}

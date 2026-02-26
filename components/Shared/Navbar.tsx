@@ -75,11 +75,7 @@ const Navbar: React.FC<NavbarProps> = ({
       href: "/Admin/projectManagement",
       icon: <MdFolder size={20} />,
     },
-    {
-      label: "Support Inbox",
-      href: "/Admin/support",
-      icon: <MdMessage size={20} />,
-    },
+    
     {
       label: "Settings",
       href: "/Admin/settings",

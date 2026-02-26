@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       storage.setItem("refreshToken", refresh_token);
 
       //========== Set Cookies for Middleware ===========
-      document.cookie = `accessToken=mock-access-token; path=/; SameSite=Lax`;
+      document.cookie = `accessToken=${access_token}; path=/; SameSite=Lax`;
       document.cookie = `userData=${encodeURIComponent(
         JSON.stringify(signedUserData),
       )}; path=/; SameSite=Lax`;

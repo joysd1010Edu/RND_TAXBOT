@@ -3,8 +3,6 @@ export interface StatCard {
   icon: React.ReactNode;
   value: string | number;
   label: string;
-  change: string;
-  changeType: "positive" | "negative";
   bgColor: string;
   iconBgColor: string;
 }

@@ -1,139 +1,114 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { HiOutlineMagnifyingGlass, HiOutlinePlus } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
 import UserRow from "./UserRow";
 import AddUserModal from "./AddUserModal";
-import type { User, AddUserFormData } from "@/Type/AdminDashboard/UserManagement";
+import type {
+  User,
+  AddUserFormData,
+} from "@/Type/AdminDashboard/UserManagement";
 import { toastManager } from "@/components/ui/toast";
+import { useAxios } from "@/Hooks/useAxiosInstance";
 
 //========== User Table Component ==========
 const UserTable: React.FC = () => {
   const router = useRouter();
+  const axios = useAxios();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
 
-  //========== Sample Users Data ==========
-  const initialUsers: User[] = [
-    {
-      id: "1",
-      name: "John Smith",
-      email: "john.smith@techcorp.com",
-      company: "TechCorp Inc",
-      projects: 3,
-      status: "active",
-      lastLogin: "2 hours ago",
-      role: "Project Manager",
-      department: "R&D",
-      phone: "+1 (555) 123-4567",
-      joinDate: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Sarah Johnson",
-      email: "sarah.j@innovate.com",
-      company: "Innovate Labs",
-      projects: 5,
-      status: "active",
-      lastLogin: "1 day ago",
-      role: "Tech Lead",
-      department: "Engineering",
-      phone: "+1 (555) 234-5678",
-      joinDate: "2023-11-20",
-    },
-    {
-      id: "3",
-      name: "Michael Chen",
-      email: "mchen@startupx.io",
-      company: "StartupX",
-      projects: 2,
-      status: "active",
-      lastLogin: "3 hours ago",
-      role: "Developer",
-      department: "Product",
-      phone: "+1 (555) 345-6789",
-      joinDate: "2024-03-10",
-    },
-    {
-      id: "4",
-      name: "Emily Davis",
-      email: "emily.d@designstudio.com",
-      company: "Design Studio",
-      projects: 0,
-      status: "pending",
-      lastLogin: "Never",
-      role: "Designer",
-      department: "Creative",
-      phone: "+1 (555) 456-7890",
-      joinDate: "2024-12-01",
-    },
-    {
-      id: "5",
-      name: "Robert Wilson",
-      email: "rwilson@datatech.com",
-      company: "DataTech Solutions",
-      projects: 1,
-      status: "suspended",
-      lastLogin: "2 weeks ago",
-      role: "Analyst",
-      department: "Data Science",
-      phone: "+1 (555) 567-8901",
-      joinDate: "2023-08-15",
-    },
-  ];
+  const [users, setUsers] = useState<User[]>([]);
 
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get("users/user/");
+
+        const data = response.data;
+        console.log("Fetched users data:", data);
+        const userList = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.results)
+              ? data.results
+              : [];
+        setUsers(userList);
+      } catch (error) {
+        toastManager.add({
+          type: "error",
+          title: "Error",
+          description: "Failed to fetch users. Please try again later.",
+        });
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   //========== Handle Add User ==========
-  const handleAddUser = (userData: AddUserFormData) => {
-    // Generate new user ID
-    const newId = (users.length + 1).toString();
-    
-    // Construct full name from first and last name
-    const fullName = [userData.firstName, userData.lastName]
-      .filter(Boolean)
-      .join(" ") || "New User";
-    
-    // Create new user object matching the User type
-    const newUser: User = {
-      id: newId,
-      name: fullName,
-      email: userData.email,
-      company: userData.businessName || "No Company",
-      projects: 0,
-      status: "pending",
-      lastLogin: "Never",
-      role: "User",
-      department: "General",
-      phone: "",
-      joinDate: new Date().toISOString().split("T")[0],
-    };
-    
-    // Add new user to the list
-    setUsers([newUser, ...users]);
-    
-    // Show success toast
-    toastManager.add({
-      type: "success",
-      title: "User Added",
-      description: `${newUser.name} has been successfully added to the system`,
-    });
+  const handleAddUser = async (userData: AddUserFormData) => {
+    try {
+      const body = {
+        email: userData.email,
+        full_name: userData.full_name,
+        password: userData.password,
+        confirm_password: userData.confirm_password,
+      };
+
+      const response = await axios.post("users/user/", body);
+      const newUser: User = response.data;
+
+      setUsers([newUser, ...users]);
+
+      toastManager.add({
+        type: "success",
+        title: "User Added",
+        description: `${newUser.full_name} has been successfully added to the system`,
+      });
+    } catch (error: any) {
+      const errData = error?.response?.data?.error;
+      let message = "Failed to add user. Please try again.";
+
+      if (errData && typeof errData === "object") {
+        message = Object.values(errData).flat().join(", ");
+      } else if (
+        error?.response?.data?.message ||
+        error?.response?.data?.detail
+      ) {
+        message = error.response.data.message || error.response.data.detail;
+      }
+
+      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: message,
+      });
+    }
+  };
+
+  //========== Derive display status from API flags ==========
+  const getUserStatus = (user: User): "active" | "suspended" | "pending" => {
+    if (user.is_suspended) return "suspended";
+    if (user.is_active) return "active";
+    return "pending";
   };
 
   //========== Filter Users ==========
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.company.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || user.status === statusFilter;
+      user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user?.company || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const status = getUserStatus(user);
+    const matchesStatus = statusFilter === "all" || status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   //========== Handle Actions ==========
-  const handleViewProfile = (userId: string) => {
+  const handleViewProfile = (userId: number) => {
     router.push(`/Admin/userManagement/${userId}`);
   };
 
@@ -141,7 +116,7 @@ const UserTable: React.FC = () => {
     toastManager.add({
       type: "success",
       title: "Email Sent",
-      description: `Email sent successfully to ${user.name} (${user.email})`,
+      description: `Email sent successfully to ${user.full_name} (${user.email})`,
     });
   };
 
@@ -157,7 +132,7 @@ const UserTable: React.FC = () => {
     toastManager.add({
       type: "warning",
       title: "Account Suspended",
-      description: `${user.name}'s account has been suspended`,
+      description: `${user.full_name}'s account has been suspended`,
     });
   };
 
@@ -165,7 +140,7 @@ const UserTable: React.FC = () => {
     toastManager.add({
       type: "error",
       title: "User Deleted",
-      description: `${user.name} has been removed from the system`,
+      description: `${user.full_name} has been removed from the system`,
     });
   };
 

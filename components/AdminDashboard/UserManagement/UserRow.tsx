@@ -11,7 +11,6 @@ import {
 import type { User } from "@/Type/AdminDashboard/UserManagement";
 import { UserRowProps } from "@/Type/AdminDashboard/UserManagement";
 
-
 //========== User Row Component ==========
 const UserRow: React.FC<UserRowProps> = ({
   user,
@@ -35,6 +34,13 @@ const UserRow: React.FC<UserRowProps> = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  //========== Derive status from API flags ==========
+  const status = user.is_suspended
+    ? "suspended"
+    : user.is_active
+      ? "active"
+      : "pending";
 
   //========== Get Status Badge Color ==========
   const getStatusColor = (status: string) => {
@@ -60,41 +66,68 @@ const UserRow: React.FC<UserRowProps> = ({
     <tr className="border-b cursor-pointer border-gray-100 hover:bg-gray-50">
       {/*========== User ID ==========*/}
       <td className="p-4">
-        <span className="text-sm text-gray-700">#{user.id}</span>
+        <span className="text-sm text-center text-gray-700">{user.id}</span>
       </td>
 
       {/*========== Name & Email ==========*/}
-      <td onClick={() => onViewProfile(user.id)} className="p-4">
+      <td
+        onClick={() => user.id !== undefined && onViewProfile(user.id)}
+        className="p-4"
+      >
         <div>
-          <p className="text-sm font-medium text-gray-900">{user.name}</p>
+          <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
           <p className="text-xs text-gray-500">{user.email}</p>
         </div>
       </td>
 
       {/*========== Company ==========*/}
-      <td onClick={() => onViewProfile(user.id)} className="p-4">
-        <p className="text-sm text-gray-700">{user.company}</p>
+      <td
+        onClick={() => user.id !== undefined && onViewProfile(user.id)}
+        className="p-4"
+      >
+        <p className="text-sm text-gray-700">
+          {user.company ? user.company : "N/A"}
+        </p>
       </td>
 
       {/*========== Projects ==========*/}
-      <td onClick={() => onViewProfile(user.id)} className="p-4">
-        <p className="text-sm text-gray-700">{user.projects}</p>
+      <td
+        onClick={() => user.id !== undefined && onViewProfile(user.id)}
+        className="p-4"
+      >
+        <p className="text-sm text-gray-700">{user.projects ?? 0}</p>
       </td>
 
       {/*========== Status ==========*/}
-      <td onClick={() => onViewProfile(user.id)} className="p-4">
+      <td
+        onClick={() => user.id !== undefined && onViewProfile(user.id)}
+        className="p-4"
+      >
         <span
           className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-            user.status
+            status,
           )}`}
         >
-          {user.status}
+          {status}
         </span>
       </td>
 
       {/*========== Last Login ==========*/}
-      <td onClick={() => onViewProfile(user.id)} className="p-4">
-        <p className="text-sm text-gray-700">{user.lastLogin}</p>
+      <td
+        onClick={() => user.id !== undefined && onViewProfile(user.id)}
+        className="p-4"
+      >
+        <p className="text-sm text-gray-700">
+          {user.last_login
+            ? new Date(user.last_login).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "Never"}
+        </p>
       </td>
 
       {/*========== Actions ==========*/}
@@ -112,6 +145,7 @@ const UserRow: React.FC<UserRowProps> = ({
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
               <button
                 onClick={() =>
+                  user.id !== undefined &&
                   handleAction(() => onViewProfile(user.id), "View Profile")
                 }
                 className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors text-gray-700"
