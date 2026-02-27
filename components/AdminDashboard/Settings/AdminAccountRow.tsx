@@ -6,13 +6,14 @@ import type { AdminAccountRowProps } from "@/Type/AdminDashboard/Settings";
 const AdminAccountRow: React.FC<AdminAccountRowProps> = ({
   account,
   onEdit,
+  getStatus,
   onRemove,
 }) => {
   return (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
       {/*========== Name ==========*/}
       <td className="p-4">
-        <p className="text-sm text-gray-900">{account.name}</p>
+        <p className="text-sm text-gray-900">{account.full_name}</p>
       </td>
 
       {/*========== Email ==========*/}
@@ -29,12 +30,18 @@ const AdminAccountRow: React.FC<AdminAccountRowProps> = ({
       <td className="p-4">
         <span
           className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-            account.status === "active"
+            getStatus(account) === "active"
               ? "bg-green-100 text-green-700"
-              : "bg-gray-100 text-gray-700"
+              : getStatus(account) === "suspended"
+                ? "bg-red-100 text-red-700"
+                : "bg-gray-100 text-gray-700"
           }`}
         >
-          {account.status}
+          {getStatus(account) === "active"
+            ? "Active"
+            : getStatus(account) === "suspended"
+              ? "Suspended"
+              : "Pending"}
         </span>
       </td>
 

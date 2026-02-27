@@ -15,9 +15,8 @@ import { UserRowProps } from "@/Type/AdminDashboard/UserManagement";
 const UserRow: React.FC<UserRowProps> = ({
   user,
   onViewProfile,
-  onSendEmail,
-  onResetPassword,
   onSuspendAccount,
+  onUnsuspendAccount,
   onDeleteUser,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -75,7 +74,7 @@ const UserRow: React.FC<UserRowProps> = ({
         className="p-4"
       >
         <div>
-          <p className="text-sm font-medium text-gray-900">{user.full_name}</p>
+          <p className="text-md font-semibold text-gray-900">{user.full_name}</p>
           <p className="text-xs text-gray-500">{user.email}</p>
         </div>
       </td>
@@ -145,40 +144,28 @@ const UserRow: React.FC<UserRowProps> = ({
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
               <button
                 onClick={() =>
-                  user.id !== undefined &&
-                  handleAction(() => onViewProfile(user.id), "View Profile")
+                  handleAction(
+                    () => user.id !== undefined && onViewProfile(user.id),
+                    "View Profile",
+                  )
                 }
                 className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors text-gray-700"
               >
                 <HiOutlineEye size={20} />
                 <span className="text-sm">View Profile</span>
               </button>
+              
               <button
                 onClick={() =>
-                  handleAction(() => onSendEmail(user), "Send Email")
-                }
-                className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors text-gray-700"
-              >
-                <HiOutlineEnvelope size={20} />
-                <span className="text-sm">Send Email</span>
-              </button>
-              <button
-                onClick={() =>
-                  handleAction(() => onResetPassword(user), "Reset Password")
-                }
-                className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors text-gray-700"
-              >
-                <HiOutlineKey size={20} />
-                <span className="text-sm">Reset Password</span>
-              </button>
-              <button
-                onClick={() =>
-                  handleAction(() => onSuspendAccount(user), "Suspend Account")
+                  handleAction(
+                    () => user.is_suspended ? onUnsuspendAccount(user) : onSuspendAccount(user),
+                    user.is_suspended ? "Unsuspend Account" : "Suspend Account"
+                  )
                 }
                 className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors text-gray-700"
               >
                 <HiOutlineNoSymbol size={20} />
-                <span className="text-sm">Suspend Account</span>
+                <span className="text-sm">{user.is_suspended ? "Unsuspend Account" : "Suspend Account"}</span>
               </button>
               <hr className="my-2 border-gray-200" />
               <button

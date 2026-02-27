@@ -20,31 +20,29 @@ const UserTable: React.FC = () => {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
 
   const [users, setUsers] = useState<User[]>([]);
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get("users/user/");
 
+      const data = response.data;
+      console.log("Fetched users data:", data);
+      const userList = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.results)
+            ? data.results
+            : [];
+      setUsers(userList);
+    } catch (error) {
+      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: "Failed to fetch users. Please try again later.",
+      });
+    }
+  };
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get("users/user/");
-
-        const data = response.data;
-        console.log("Fetched users data:", data);
-        const userList = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)
-            ? data.data
-            : Array.isArray(data?.results)
-              ? data.results
-              : [];
-        setUsers(userList);
-      } catch (error) {
-        toastManager.add({
-          type: "error",
-          title: "Error",
-          description: "Failed to fetch users. Please try again later.",
-        });
-      }
-    };
-
     fetchUsers();
   }, []);
 
@@ -112,36 +110,60 @@ const UserTable: React.FC = () => {
     router.push(`/Admin/userManagement/${userId}`);
   };
 
-  const handleSendEmail = (user: User) => {
-    toastManager.add({
+
+  const handleSuspendAccount = async (user: User) => {
+    const response = await axios.put(`users/suspend-user/${user.id}/`);
+    if (response.status === 200) {
+      fetchUsers();
+      toastManager.add({
+        type: "warning",
+        title: "Account Suspended",
+        description: `${user.full_name}'s account has been suspended`,
+      });
+    } else {
+      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: `Failed to suspend ${user.full_name}'s account. Please try again.`,
+      });
+    }
+  };
+
+  const handleUnsuspendAccount = async (user: User) => {
+    const response = await axios.put(`users/suspend-user/${user.id}/`);
+    if (response.status === 200) {
+      fetchUsers();
+      toastManager.add({
+        type: "success",
+        title: "Account Unsuspended",
+        description: `${user.full_name}'s account has been unsuspended`,
+      });
+    } else {
+      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: `Failed to unsuspend ${user.full_name}'s account. Please try again.`,
+      });
+    }
+  };
+
+  const handleDeleteUser =async (user: User) => {
+    const response = await axios.delete(`users/user/${user.id}/`);
+    if (response.status === 200 || response.status === 204) {
+      fetchUsers();toastManager.add({
       type: "success",
-      title: "Email Sent",
-      description: `Email sent successfully to ${user.full_name} (${user.email})`,
-    });
-  };
-
-  const handleResetPassword = (user: User) => {
-    toastManager.add({
-      type: "success",
-      title: "Password Reset",
-      description: `Password reset link sent to ${user.email}`,
-    });
-  };
-
-  const handleSuspendAccount = (user: User) => {
-    toastManager.add({
-      type: "warning",
-      title: "Account Suspended",
-      description: `${user.full_name}'s account has been suspended`,
-    });
-  };
-
-  const handleDeleteUser = (user: User) => {
-    toastManager.add({
-      type: "error",
       title: "User Deleted",
       description: `${user.full_name} has been removed from the system`,
     });
+    } else {      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: `Failed to delete ${user.full_name}. Please try again.`,
+      });
+      return;
+    }
+
+    
   };
 
   return (
@@ -220,9 +242,9 @@ const UserTable: React.FC = () => {
                   key={user.id}
                   user={user}
                   onViewProfile={handleViewProfile}
-                  onSendEmail={handleSendEmail}
-                  onResetPassword={handleResetPassword}
+                 
                   onSuspendAccount={handleSuspendAccount}
+                  onUnsuspendAccount={handleUnsuspendAccount}
                   onDeleteUser={handleDeleteUser}
                 />
               ))}

@@ -82,8 +82,7 @@ export interface SupportMessageItemProps {
 export interface UserRowProps {
   user: User;
   onViewProfile: (userId: number) => void;
-  onSendEmail: (user: User) => void;
-  onResetPassword: (user: User) => void;
+  onUnsuspendAccount: (user: User) => void;
   onSuspendAccount: (user: User) => void;
   onDeleteUser: (user: User) => void;
 }

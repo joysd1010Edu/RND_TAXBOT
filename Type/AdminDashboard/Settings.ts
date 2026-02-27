@@ -1,9 +1,14 @@
 export interface AdminAccount {
+  name?: any;
   id: string;
-  name: string;
+  full_name: string;
   email: string;
   role: "Super Admin" | "Reviewer" | "Admin";
-  status: "active" | "inactive";
+  status?: "active" | "inactive";
+  is_active?: boolean;
+  is_suspended?: boolean;
+  password?: string;
+  confirm_password?: string;
 }
 
 export interface ComplianceRule {
@@ -28,6 +33,7 @@ export interface EmailTemplate {
 
 export interface AdminAccountRowProps {
   account: AdminAccount;
+  getStatus: (account: AdminAccount) => "active" | "suspended" | "pending";
   onEdit: (account: AdminAccount) => void;
   onRemove: (account: AdminAccount) => void;
 }

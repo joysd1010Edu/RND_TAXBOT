@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { HiOutlineXMark } from "react-icons/hi2";
+import { HiOutlineEye, HiOutlineEyeSlash } from "react-icons/hi2";
 import type { AdminAccount } from "@/Type/AdminDashboard/Settings";
 
 interface AddAdminModalProps {
@@ -16,21 +17,27 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({
   onAdd,
 }) => {
   const [formData, setFormData] = useState({
-    name: "",
+    full_name: "",
     email: "",
     role: "Admin" as AdminAccount["role"],
-    status: "active" as AdminAccount["status"],
+    password: "",
+    confirm_password: "",
+    status: "active" as const,
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   //========== Handle Submit ==========
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAdd(formData);
     setFormData({
-      name: "",
+      full_name: "",
       email: "",
-      role: "Admin",
-      status: "active",
+      role: "Admin" as AdminAccount["role"],
+      password: "",
+      confirm_password: "",
+      status: "active" as const,
     });
     onClose();
   };
@@ -66,9 +73,9 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({
             </label>
             <input
               type="text"
-              value={formData.name}
+              value={formData.full_name}
               onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
+                setFormData({ ...formData, full_name: e.target.value })
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter admin name"
@@ -108,30 +115,65 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="Admin">Admin</option>
-              <option value="Reviewer">Reviewer</option>
-              <option value="Super Admin">Super Admin</option>
+              <option value="REVIEWER">Admin</option>
+              <option value="SUPERADMIN">Super Admin</option>
             </select>
           </div>
-
-          {/*========== Status Field ==========*/}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
+              Password
             </label>
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  status: e.target.value as AdminAccount["status"],
-                })
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? (
+                  <HiOutlineEyeSlash size={20} />
+                ) : (
+                  <HiOutlineEye size={20} />
+                )}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.confirm_password}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirm_password: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Confirm password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showConfirmPassword ? (
+                  <HiOutlineEyeSlash size={20} />
+                ) : (
+                  <HiOutlineEye size={20} />
+                )}
+              </button>
+            </div>
           </div>
 
           {/*========== Action Buttons ==========*/}

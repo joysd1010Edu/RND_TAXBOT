@@ -118,9 +118,9 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="Admin">Admin</option>
-              <option value="Reviewer">Reviewer</option>
-              <option value="Super Admin">Super Admin</option>
+              
+              <option value="REVIEWER">Reviewer</option>
+              <option value="SUPERADMIN">Super Admin</option>
             </select>
           </div>
 
