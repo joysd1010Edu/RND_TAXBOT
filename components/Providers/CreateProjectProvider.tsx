@@ -122,35 +122,41 @@ export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
   const completionPercentage = Math.round((currentStep / totalSteps) * 100);
 
   //========================= Save Draft =========================
-  const saveDraft = useCallback(async () => {
-    try {
-      const projectData: ProjectFormData = {
-        ...formData,
-        status: "draft",
-        updatedAt: new Date().toISOString(),
-        id: projectId || `project_${Date.now()}`,
-      };
+  const saveDraft = useCallback(
+    async (currentValues?: Partial<ProjectFormData>) => {
+      try {
+        const latestData = currentValues
+          ? { ...formData, ...currentValues }
+          : formData;
+        const projectData: ProjectFormData = {
+          ...latestData,
+          status: "draft",
+          updatedAt: new Date().toISOString(),
+          id: projectId || `project_${Date.now()}`,
+        };
 
-      // Save to localStorage (replace with API call)
-      localStorage.setItem(
-        `project_${projectData.id}`,
-        JSON.stringify(projectData),
-      );
+        // Save to localStorage (replace with API call)
+        localStorage.setItem(
+          `project_${projectData.id}`,
+          JSON.stringify(projectData),
+        );
 
-      // Show success toast
-      toastManager.add({
-        title: "Draft Saved",
-        description: "Your project has been saved as a draft successfully.",
-        type: "success",
-      });
-    } catch (error) {
-      toastManager.add({
-        title: "Error",
-        description: "Failed to save draft. Please try again.",
-        type: "error",
-      });
-    }
-  }, [formData, projectId]);
+        // Show success toast
+        toastManager.add({
+          title: "Draft Saved",
+          description: "Your project has been saved as a draft successfully.",
+          type: "success",
+        });
+      } catch (error) {
+        toastManager.add({
+          title: "Error",
+          description: "Failed to save draft. Please try again.",
+          type: "error",
+        });
+      }
+    },
+    [formData, projectId],
+  );
 
   //========================= Submit Project =========================
   const submitProject = useCallback(async (): Promise<boolean> => {

@@ -12,13 +12,49 @@ import type { IncompleteUser } from "@/Type/AdminDashboard/Analytics";
 import { LuUserMinus, LuUsers } from "react-icons/lu";
 import { IoPulseSharp, IoWarningOutline } from "react-icons/io5";
 import { usePageTitle } from "@/components/Providers/PageTitleProvider";
+import { toastManager } from "@/components/ui/toast";
+import { useAxios } from "@/Hooks/useAxiosInstance";
 
 //========== Analytics Component ==========
 const Analysis = () => {
+  const [statistics, setstatistics] = React.useState({
+    totalUsers: 0,
+    active_projects: 0,
+    pendingReviews: 0,
+    inactive_users: 0,
+    active_users: 0,
+    completed_projects: 0,
+  });
   const { setPageTitle } = usePageTitle();
   useEffect(() => {
     setPageTitle("Analytics & Reporting");
   }, [setPageTitle]);
+  const axios = useAxios();
+  
+    useEffect(() => {
+      const fetchStats = async () => {
+        try {
+          const response = await axios.get("calculations/admin_dashboard/");
+          const data = {
+            totalUsers: response.data.data.total_users,
+            active_projects: response.data.data.active_projects,
+            pendingReviews: response.data.data.pending_projects,
+            inactive_users: response.data.data.inactive_users,
+            active_users: response.data.data.active_users,
+            completed_projects: response.data.data.completed_projects,
+          };
+          setstatistics(data);
+        } catch (error) {
+          console.error("Error fetching stats:", error);
+          toastManager.add({
+            title: "Error",
+            description:
+              "Failed to load dashboard statistics. Please try again later.",
+          });
+        }
+      };
+      fetchStats();
+    }, []);
 
   //========== Stats Data ==========
   const stats = [
@@ -26,7 +62,7 @@ const Analysis = () => {
       id: "1",
       icon: <LuUsers size={24} />,
       label: "Active Users",
-      value: 67,
+      value: statistics?.active_users || 0,
       subtext: "+15% from last month",
       subtextType: "positive" as const,
       bgColor: "bg-blue-50",
@@ -36,27 +72,18 @@ const Analysis = () => {
       id: "2",
       icon: <LuUserMinus size={24} />,
       label: "Inactive Users",
-      value: 11,
+      value: statistics?.inactive_users || 0,
       subtext: "Needs attention",
       subtextType: "negative" as const,
       bgColor: "bg-orange-50",
       iconColor: "text-orange-600",
     },
-    {
-      id: "3",
-      icon: <IoPulseSharp size={24} />,
-      label: "Avg Completion Time",
-      value: "30 days",
-      subtext: "33% improvement",
-      subtextType: "positive" as const,
-      bgColor: "bg-purple-50",
-      iconColor: "text-purple-600",
-    },
+   
     {
       id: "4",
       icon: <IoWarningOutline size={24} />,
       label: "Stuck Projects",
-      value: 8,
+      value: statistics?.pendingReviews || 0,
       subtext: "No activity 14+ days",
       subtextType: "warning" as const,
       bgColor: "bg-red-50",

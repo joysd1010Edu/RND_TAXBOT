@@ -20,7 +20,7 @@ export interface User {
   is_suspended: boolean;
   date_joined: string;
   last_login: string;
-  projects?: number;
+  tax_projects?: number;
 }
 
 export interface UserProject {

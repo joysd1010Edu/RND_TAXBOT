@@ -80,8 +80,9 @@ const CreateProjectContent = () => {
 
   //========================= Handle Save Draft =========================
   const handleSaveDraft = async () => {
-    updateFormData(methods.getValues());
-    await saveDraft();
+    const currentValues = methods.getValues();
+    updateFormData(currentValues);
+    await saveDraft(currentValues);
   };
 
   //========================= Handle Submit =========================

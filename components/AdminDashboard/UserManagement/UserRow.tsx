@@ -74,7 +74,9 @@ const UserRow: React.FC<UserRowProps> = ({
         className="p-4"
       >
         <div>
-          <p className="text-md font-semibold text-gray-900">{user.full_name}</p>
+          <p className="text-md font-semibold text-gray-900">
+            {user.full_name}
+          </p>
           <p className="text-xs text-gray-500">{user.email}</p>
         </div>
       </td>
@@ -94,7 +96,7 @@ const UserRow: React.FC<UserRowProps> = ({
         onClick={() => user.id !== undefined && onViewProfile(user.id)}
         className="p-4"
       >
-        <p className="text-sm text-gray-700">{user.projects ?? 0}</p>
+        <p className="text-sm text-gray-700">{user.tax_projects ?? 0}</p>
       </td>
 
       {/*========== Status ==========*/}
@@ -154,18 +156,23 @@ const UserRow: React.FC<UserRowProps> = ({
                 <HiOutlineEye size={20} />
                 <span className="text-sm">View Profile</span>
               </button>
-              
+
               <button
                 onClick={() =>
                   handleAction(
-                    () => user.is_suspended ? onUnsuspendAccount(user) : onSuspendAccount(user),
-                    user.is_suspended ? "Unsuspend Account" : "Suspend Account"
+                    () =>
+                      user.is_suspended
+                        ? onUnsuspendAccount(user)
+                        : onSuspendAccount(user),
+                    user.is_suspended ? "Unsuspend Account" : "Suspend Account",
                   )
                 }
                 className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 transition-colors text-gray-700"
               >
                 <HiOutlineNoSymbol size={20} />
-                <span className="text-sm">{user.is_suspended ? "Unsuspend Account" : "Suspend Account"}</span>
+                <span className="text-sm">
+                  {user.is_suspended ? "Unsuspend Account" : "Suspend Account"}
+                </span>
               </button>
               <hr className="my-2 border-gray-200" />
               <button

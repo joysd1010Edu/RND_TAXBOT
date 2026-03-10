@@ -41,8 +41,7 @@ const AnalyticsStatCard: React.FC<AnalyticsStatCardProps> = ({
       {/*========== Value ==========*/}
       <p className="text-3xl font-bold text-gray-900 mb-2">{value}</p>
 
-      {/*========== Subtext ==========*/}
-      <p className={`text-sm font-medium ${getSubtextColor()}`}>{subtext}</p>
+      
     </div>
   );
 };

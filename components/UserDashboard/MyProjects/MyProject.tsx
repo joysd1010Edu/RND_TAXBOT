@@ -12,19 +12,31 @@ import { ProjectFormData } from "@/Type/UserDashboard/CreateProject";
 import ProjectListCard from "@/components/Shared/Cards/ProjectListCard";
 import { useAxios } from "@/Hooks/useAxiosInstance";
 import { toastManager } from "@/components/ui/toast";
+import {
+  AlertDialog,
+  AlertDialogPopup,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogClose,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 //========== Status Derivation ===========
 const deriveProgress = (status: string): number => {
-  if (status === "completed" || status === "approved") return 100;
-  if (status === "under_review" || status === "submitted") return 100;
+  const s = status.toLowerCase();
+  if (s === "completed" || s === "approved") return 100;
+  if (s === "under_review" || s === "submitted") return 100;
   return 0;
 };
 
 const mapApiStatus = (status: string): ProjectStatus => {
-  if (status === "completed" || status === "approved") return "completed";
-  if (status === "under_review") return "under_review";
-  if (status === "submitted") return "pending-review";
-  if (status === "draft") return "draft";
+  const s = status.toLowerCase();
+  if (s === "completed" || s === "approved") return "completed";
+  if (s === "under_review") return "under_review";
+  if (s === "submitted" || s === "pending") return "pending-review";
+  if (s === "draft") return "draft";
   return "pending-review";
 };
 
@@ -67,6 +79,7 @@ const MyProject: React.FC = () => {
     search: "",
     status: "all",
   });
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
   //========== Load Data ===========
   const loadProjects = useCallback(async () => {
@@ -106,32 +119,35 @@ const MyProject: React.FC = () => {
   }, [loadProjects]);
 
   //========== Delete Project ===========
-  const handleDelete = useCallback(
-    async (project: Project) => {
-      if (project.canEdit) {
-        // Local draft — remove from localStorage only
-        localStorage.removeItem(`project_${project.id}`);
-        setAllProjects((prev) => prev.filter((p) => p.id !== project.id));
-      } else {
-        try {
-          await axios.delete(`tax_project/userlist/${project.id}/`);
-          setAllProjects((prev) => prev.filter((p) => p.id !== project.id));
-          toastManager.add({
-            title: "Project Deleted",
-            description: "The project has been deleted successfully.",
-            type: "success",
-          });
-        } catch {
-          toastManager.add({
-            title: "Delete Failed",
-            description: "Failed to delete the project. Please try again.",
-            type: "error",
-          });
-        }
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    if (deleteTarget.canEdit) {
+      localStorage.removeItem(`project_${deleteTarget.id}`);
+      setAllProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+      toastManager.add({
+        title: "Draft Deleted",
+        description: "The draft has been removed.",
+        type: "success",
+      });
+    } else {
+      try {
+        await axios.delete(`tax_project/userlist/${deleteTarget.id}/`);
+        setAllProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+        toastManager.add({
+          title: "Project Deleted",
+          description: "The project has been deleted successfully.",
+          type: "success",
+        });
+      } catch {
+        toastManager.add({
+          title: "Delete Failed",
+          description: "Failed to delete the project. Please try again.",
+          type: "error",
+        });
       }
-    },
-    [axios],
-  );
+    }
+    setDeleteTarget(null);
+  }, [deleteTarget, axios]);
 
   //========== Filter and Search Logic ===========
   const filteredProjects = useMemo(() => {
@@ -229,7 +245,7 @@ const MyProject: React.FC = () => {
             <ProjectListCard
               key={project.id}
               project={project}
-              onDelete={() => handleDelete(project)}
+              onDelete={() => setDeleteTarget(project)}
             />
           ))}
         </div>
@@ -249,6 +265,33 @@ const MyProject: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/*========= Delete Confirmation Dialog =========*/}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogPopup>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deleteTarget?.title}&quot;?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose>
+              <Button variant="outline">Cancel</Button>
+            </AlertDialogClose>
+            <Button
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogPopup>
+      </AlertDialog>
     </div>
   );
 };
