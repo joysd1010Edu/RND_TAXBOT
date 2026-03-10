@@ -107,10 +107,10 @@ const TopBar: React.FC<TopBarProps> = ({
               </div>
               <div className="hidden md:block text-left">
                 <p className="text-sm font-semibold text-gray-900">
-                  {user?.name || "John Smith"}
+                  {user?.full_name || "User"}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {user?.email || "john@techcorp.com"}
+                  {user?.email || "N/A"}
                 </p>
               </div>
               <MdKeyboardArrowDown

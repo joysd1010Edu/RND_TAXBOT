@@ -7,46 +7,31 @@ import {
 } from "react-icons/hi2";
 import type { ProjectTableRowProps } from "@/Type/AdminDashboard/ProjectManagement";
 
+const statusStyles: Record<string, string> = {
+  Pending: "bg-yellow-100 text-yellow-700",
+  pending: "bg-yellow-100 text-yellow-700",
+  under_review: "bg-blue-100 text-blue-700",
+  completed: "bg-green-100 text-green-700",
+  approved: "bg-green-100 text-green-700",
+  rejected: "bg-red-100 text-red-700",
+};
+
 //========== Project Table Row Component ==========
 const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
   project,
   onView,
   onEmail,
-  onDownload,
+  
 }) => {
-  //========== Get Compliance Color ==========
-  const getComplianceColor = (compliance: number) => {
-    if (compliance >= 80) return "text-green-600";
-    if (compliance >= 60) return "text-yellow-600";
-    return "text-red-600";
-  };
-
-  //========== Get Status Badge Color ==========
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "in progress":
-        return "bg-yellow-100 text-yellow-700";
-      case "needs clarification":
-        return "bg-orange-100 text-orange-700";
-      case "submitted":
-        return "bg-blue-100 text-blue-700";
-      case "completed":
-        return "bg-green-100 text-green-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
+  const badge = statusStyles[project.status] ?? "bg-gray-100 text-gray-700";
 
   return (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
-      {/*========== Project Name ==========*/}
+      {/*========== Project Title ==========*/}
       <td className="p-4">
-        <p className="text-sm font-medium text-gray-900">{project.name}</p>
-      </td>
-
-      {/*========== User ==========*/}
-      <td className="p-4">
-        <p className="text-sm text-gray-700">{project.userName}</p>
+        <p className="text-sm font-medium text-gray-900">
+          {project.project_title}
+        </p>
       </td>
 
       {/*========== Industry ==========*/}
@@ -54,38 +39,27 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
         <p className="text-sm text-gray-700">{project.industry}</p>
       </td>
 
-      {/*========== Progress ==========*/}
+      {/*========== Financial Year ==========*/}
       <td className="p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-20">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${project.progress}%` }}
-            ></div>
-          </div>
-          <span className="text-sm text-gray-700 whitespace-nowrap">
-            {project.progress}%
-          </span>
-        </div>
+        <p className="text-sm text-gray-700">{project.financial_year}</p>
       </td>
 
-      {/*========== Compliance ==========*/}
+      {/*========== Staff ==========*/}
       <td className="p-4">
-        <span
-          className={`text-sm font-semibold ${getComplianceColor(
-            project.compliance
-          )}`}
-        >
-          {project.compliance}%
-        </span>
+        <p className="text-sm text-gray-700">{project.staff_members}</p>
+      </td>
+
+      {/*========== Total R&D Expenditure ==========*/}
+      <td className="p-4">
+        <p className="text-sm font-medium text-gray-700">
+          ${Number(project.total_rnd_expenditure).toLocaleString()}
+        </p>
       </td>
 
       {/*========== Status ==========*/}
       <td className="p-4">
         <span
-          className={`inline-block px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
-            project.status
-          )}`}
+          className={`inline-block px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${badge}`}
         >
           {project.status}
         </span>
@@ -94,7 +68,7 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
       {/*========== Last Updated ==========*/}
       <td className="p-4">
         <p className="text-sm text-gray-700 whitespace-nowrap">
-          {project.lastUpdated}
+          {new Date(project.updated_at).toLocaleDateString()}
         </p>
       </td>
 
@@ -102,7 +76,7 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
       <td className="p-4">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => onView(project.id)}
+            onClick={() => onView(String(project.id))}
             className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
             title="View Project"
           >
@@ -115,13 +89,7 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
           >
             <HiOutlineEnvelope size={20} className="text-orange-600" />
           </button>
-          <button
-            onClick={() => onDownload(project)}
-            className="p-2 hover:bg-green-50 rounded-lg transition-colors"
-            title="Download Report"
-          >
-            <HiOutlineArrowDownTray size={20} className="text-green-600" />
-          </button>
+        
         </div>
       </td>
     </tr>

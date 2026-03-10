@@ -1,10 +1,10 @@
-import ProjectDetailPage from "@/components/AdminDashboard/ProjectManagement/ProjectDetailPage"
+"use client";
+import { use } from "react";
+import ProjectDetailPage from "@/components/AdminDashboard/ProjectManagement/ProjectDetailPage";
 
+const page = ({ params }: { params: Promise<{ id: string }> }) => {
+  const { id } = use(params);
+  return <ProjectDetailPage projectId={id} />;
+};
 
-const page = ({ params }: { params: { id: string } }) => {
-  return (
-    <ProjectDetailPage params={params} />
-  )
-}
-
-export default page
+export default page;

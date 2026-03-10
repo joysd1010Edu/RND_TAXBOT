@@ -4,14 +4,7 @@ import React, { useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { MdArrowBack } from "react-icons/md";
-import {
-  FaArrowUp,
-  FaBolt,
-  FaUsers,
-  FaDollarSign,
-  FaClock,
-  FaChartLine,
-} from "react-icons/fa";
+
 import { usePageTitle } from "@/components/Providers/PageTitleProvider";
 import ReportHeader from "./ReportSections/ReportHeader";
 import ExecutiveSummary from "./ReportSections/ExecutiveSummary";

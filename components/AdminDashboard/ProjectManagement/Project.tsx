@@ -1,108 +1,135 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { HiOutlineArrowLeft, HiOutlineMagnifyingGlass } from "react-icons/hi2";
 import { useRouter } from "next/navigation";
 import ProjectTableRow from "./ProjectTableRow";
-import type { Project } from "@/Type/AdminDashboard/ProjectManagement";
+import type { Project as ProjectType } from "@/Type/AdminDashboard/ProjectManagement";
 import { toastManager } from "@/components/ui/toast";
+import { useAxios } from "@/Hooks/useAxiosInstance";
+import SendEmailModal from "../UserManagement/SendEmailModal";
 
 //========== Project Management Component ==========
 const Project = () => {
   const router = useRouter();
+  const axios = useAxios();
+  const [projects, setProjects] = useState<ProjectType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectType | null>(
+    null,
+  );
 
-  //========== Sample Projects Data ==========
-  const projects: Project[] = [
-    {
-      id: "1",
-      name: "Website Redesign Project",
-      userName: "John Smith",
-      userEmail: "john.smith@techcorp.com",
-      industry: "Technology",
-      progress: 75,
-      compliance: 88,
-      status: "in progress",
-      lastUpdated: "2 hours ago",
-    },
-    {
-      id: "2",
-      name: "Mobile App Development",
-      userName: "Sarah Johnson",
-      userEmail: "sarah.j@innovate.com",
-      industry: "Healthcare",
-      progress: 45,
-      compliance: 62,
-      status: "needs clarification",
-      lastUpdated: "1 day ago",
-    },
-    {
-      id: "3",
-      name: "Data Analytics Platform",
-      userName: "Michael Chen",
-      userEmail: "mchen@startupx.io",
-      industry: "Finance",
-      progress: 100,
-      compliance: 95,
-      status: "submitted",
-      lastUpdated: "3 days ago",
-    },
-    {
-      id: "4",
-      name: "Cloud Migration",
-      userName: "Emily Davis",
-      userEmail: "emily.d@designstudio.com",
-      industry: "Manufacturing",
-      progress: 90,
-      compliance: 78,
-      status: "in progress",
-      lastUpdated: "5 hours ago",
-    },
-    {
-      id: "5",
-      name: "AI Integration System",
-      userName: "Robert Wilson",
-      userEmail: "rwilson@datatech.com",
-      industry: "Retail",
-      progress: 100,
-      compliance: 92,
-      status: "completed",
-      lastUpdated: "1 week ago",
-    },
-  ];
+  //========== Fetch Projects ==========
+  const fetchProjects = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("tax_project/adminlist/");
+      if (response.data?.success && response.data.data) {
+        setProjects(response.data.data);
+      }
+    } catch {
+      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: "Failed to load projects. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [axios]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   //========== Filter Projects ==========
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.industry.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || project.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchesSearch =
+        (project.project_title ?? "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        (project.industry ?? "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" ||
+        project.status.toLowerCase() === statusFilter.toLowerCase();
+      return matchesSearch && matchesStatus;
+    });
+  }, [projects, searchQuery, statusFilter]);
 
   //========== Handle Actions ==========
   const handleView = (projectId: string) => {
     router.push(`/Admin/projectManagement/${projectId}`);
   };
 
-  const handleEmail = (project: Project) => {
-    toastManager.add({
-      type: "success",
-      title: "Email Sent",
-      description: `Email sent to ${project.userName} about ${project.name}`,
-    });
+  const handleEmail = (project: ProjectType) => {
+    setSelectedProject(project);
+    setIsEmailModalOpen(true);
   };
 
-  const handleDownload = (project: Project) => {
-    toastManager.add({
-      type: "info",
-      title: "Downloading",
-      description: `Downloading report for ${project.name}...`,
-    });
+  const handleSendEmailSubmit = async (data: {
+    subject: string;
+    body: string;
+  }) => {
+    if (!selectedProject) return;
+    try {
+      setIsSendingEmail(true);
+      await axios.post(`users/send-mail/${selectedProject.id}/`, {
+        subject: data.subject,
+        message: data.body,
+      });
+
+      setIsEmailModalOpen(false);
+
+      setTimeout(() => {
+        toastManager.add({
+          type: "success",
+          title: "Email Sent",
+          description: `Email sent successfully regarding ${selectedProject.project_title}`,
+        });
+      }, 100);
+    } catch (err: unknown) {
+      const error = err as {
+        response?: { data?: { message?: string; detail?: string } };
+      };
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        "Failed to send email. Please try again.";
+      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: message,
+      });
+      throw err;
+    } finally {
+      setIsSendingEmail(false);
+      setIsEmailModalOpen(false);
+    }
   };
+
+  const handleDownload = (project: ProjectType) => {
+    if(project.status.toLowerCase() !== "completed") {
+    toastManager.add({
+      type: "error",
+      title: "Project Not Completed",
+      description: `Cannot download report for ${project.project_title}. Project is not completed.`,
+    });
+  }
+    else {
+      toastManager.add({
+        type: "success",
+        title: "Download Ready",
+        description: `Report for ${project.project_title} is ready for download.`,
+      });
+    }
+}
 
   return (
     <div className="space-y-8 px-0 md:px-10 py-8 lg:px-18">
@@ -147,10 +174,9 @@ const Project = () => {
           className="px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         >
           <option value="all">All Status</option>
-          <option value="in progress">In Progress</option>
-          <option value="needs clarification">Needs Clarification</option>
-          <option value="submitted">Submitted</option>
+          <option value="pending">Pending</option>
           <option value="completed">Completed</option>
+       
         </select>
       </div>
 
@@ -161,19 +187,19 @@ const Project = () => {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
-                  Project Name
-                </th>
-                <th className="text-left p-4 text-sm font-semibold text-gray-700">
-                  User
+                  Project Title
                 </th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
                   Industry
                 </th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
-                  Progress
+                  Financial Year
                 </th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
-                  Compliance
+                  Staff
+                </th>
+                <th className="text-left p-4 text-sm font-semibold text-gray-700">
+                  R&D Expenditure
                 </th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
                   Status
@@ -193,20 +219,34 @@ const Project = () => {
                   project={project}
                   onView={handleView}
                   onEmail={handleEmail}
-                  onDownload={handleDownload}
+                  
                 />
               ))}
             </tbody>
           </table>
         </div>
 
-        {/*========== Empty State ==========*/}
-        {filteredProjects.length === 0 && (
+        {/*========== Empty / Loading State ==========*/}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">Loading projects...</p>
+          </div>
+        ) : filteredProjects.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No projects found</p>
           </div>
-        )}
+        ) : null}
       </div>
+
+      {/*========== Send Email Modal ==========*/}
+      <SendEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        recipientName={selectedProject?.project_title || "Project"}
+        recipientEmail={String(selectedProject?.id ?? "")}
+        onSend={handleSendEmailSubmit}
+        isSending={isSendingEmail}
+      />
     </div>
   );
 };

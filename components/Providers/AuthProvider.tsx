@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const router = useRouter();
-  const axios=useAxios()
+  const axios = useAxios();
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
@@ -46,6 +46,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             isLoading: false,
           });
         } else {
+          // No user in storage — clear any stale cookies so the middleware
+          // doesn't redirect back and cause an infinite loop
+          document.cookie =
+            "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+          document.cookie =
+            "userData=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
           setAuthState({
             user: null,
             isAuthenticated: false,
@@ -71,12 +77,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       console.log("email and pass:", email, password);
       setAuthState((prev) => ({ ...prev, isLoading: true }));
       const response = await axios.post("/users/login/", { email, password });
-     
+
       if (response.status !== 200) {
-       console.log(response)
+        console.log(response);
       }
       console.log("Login response:", response);
-      const signedUserData: User = response.data.user
+      const signedUserData: User = response.data.user;
       const storage = localStorage;
       const access_token = response.data.tokens.access;
       const refresh_token = response.data.tokens.refresh;
@@ -97,7 +103,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       //========== Redirect Based on Role ===========
-      if (signedUserData.role?.toLowerCase() === "admin"||signedUserData.role?.toLowerCase() === "superadmin") {
+      if (
+        signedUserData.role?.toLowerCase() === "admin" ||
+        signedUserData.role?.toLowerCase() === "superadmin"
+      ) {
         router.push("/Admin/Dashboard");
       } else {
         router.push("/user/UserDashboard");

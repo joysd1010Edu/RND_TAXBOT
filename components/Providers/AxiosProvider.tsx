@@ -42,7 +42,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
   const axiosInstance = useMemo(() => {
     const instance = axios.create({
       baseURL,
-      timeout: 10000,
+      timeout: 60000,
       headers: {
         "ngrok-skip-browser-warning": "true",
         "Content-Type": "application/json",
@@ -135,6 +135,10 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
               sessionStorage.removeItem("user");
               sessionStorage.removeItem("accessToken");
               sessionStorage.removeItem("refreshToken");
+              document.cookie =
+                "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+              document.cookie =
+                "userData=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
               window.location.href = "/Login";
               return Promise.reject(error);
             }
@@ -151,6 +155,10 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
               sessionStorage.removeItem("user");
               sessionStorage.removeItem("accessToken");
               sessionStorage.removeItem("refreshToken");
+              document.cookie =
+                "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+              document.cookie =
+                "userData=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
               window.location.href = "/Login";
               return Promise.reject(error);
             }
