@@ -63,9 +63,9 @@ const CreateProjectContent = () => {
       }
     } else {
       // Scroll to first error
-      const firstError = document.querySelector('.border-red-500');
+      const firstError = document.querySelector(".border-red-500");
       if (firstError) {
-        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstError.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
   };
@@ -90,13 +90,15 @@ const CreateProjectContent = () => {
     const isValid = await methods.trigger();
     if (isValid) {
       updateFormData(methods.getValues());
-      await submitProject();
-      setShowSuccess(true);
+      const success = await submitProject();
+      if (success) {
+        setShowSuccess(true);
+      }
     } else {
       // Scroll to first error
-      const firstError = document.querySelector('.border-red-500');
+      const firstError = document.querySelector(".border-red-500");
       if (firstError) {
-        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstError.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }
   };

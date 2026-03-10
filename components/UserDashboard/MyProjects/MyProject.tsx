@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { MdArrowBack, MdSearch, MdFilterList } from "react-icons/md";
 import {
@@ -8,101 +8,142 @@ import {
   FilterState,
   ProjectStatus,
 } from "@/Type/UserDashboard/MyProject";
+import { ProjectFormData } from "@/Type/UserDashboard/CreateProject";
 import ProjectListCard from "@/components/Shared/Cards/ProjectListCard";
+import { useAxios } from "@/Hooks/useAxiosInstance";
+import { toastManager } from "@/components/ui/toast";
 
-//========== Dummy Data ===========
-const dummyProjects: Project[] = [
-  {
-    id: "1",
-    title: "AI-Powered Analytics Platform Development",
-    fiscalYear: "FY 2025",
-    progress: 65,
-    status: "draft",
-    lastUpdated: "Q3 2025",
-    canEdit: true,
-    canRenew: false,
-  },
-  {
-    id: "2",
-    title: "Advanced Manufacturing Process Innovation",
-    fiscalYear: "FY 2024",
-    progress: 100,
-    status: "completed",
-    lastUpdated: "Q4 2024",
-    canEdit: false,
-    canRenew: true,
-  },
-  {
-    id: "3",
-    title: "Sustainable Energy Storage Solution",
-    fiscalYear: "FY 2025",
-    progress: 95,
-    status: "pending-review",
-    lastUpdated: "Q3 2025",
-    canEdit: false,
-    canRenew: false,
-  },
-  {
-    id: "4",
-    title: "Machine Learning Model Optimization Framework",
-    fiscalYear: "FY 2025",
-    progress: 45,
-    status: "draft",
-    lastUpdated: "Q2 2025",
-    canEdit: true,
-    canRenew: false,
-  },
-  {
-    id: "5",
-    title: "Quantum Computing Algorithm Research",
-    fiscalYear: "FY 2024",
-    progress: 100,
-    status: "completed",
-    lastUpdated: "Q2 2024",
-    canEdit: false,
-    canRenew: true,
-  },
-  {
-    id: "6",
-    title: "Blockchain-Based Supply Chain Management",
-    fiscalYear: "FY 2025",
-    progress: 80,
-    status: "pending-review",
-    lastUpdated: "Q3 2025",
-    canEdit: false,
-    canRenew: false,
-  },
-  {
-    id: "7",
-    title: "IoT-Based Smart Building System",
-    fiscalYear: "FY 2025",
-    progress: 100,
-    status: "under_review",
-    lastUpdated: "Q4 2025",
-    canEdit: false,
-    canRenew: false,
-  },
-];
+//========== Status Derivation ===========
+const deriveProgress = (status: string): number => {
+  if (status === "completed" || status === "approved") return 100;
+  if (status === "under_review" || status === "submitted") return 100;
+  return 0;
+};
+
+const mapApiStatus = (status: string): ProjectStatus => {
+  if (status === "completed" || status === "approved") return "completed";
+  if (status === "under_review") return "under_review";
+  if (status === "submitted") return "pending-review";
+  if (status === "draft") return "draft";
+  return "pending-review";
+};
+
+//========== Load localStorage Drafts ===========
+const loadLocalDrafts = (): Project[] => {
+  const drafts: Project[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith("project_")) continue;
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const parsed: ProjectFormData = JSON.parse(raw);
+      if (parsed.status !== "draft") continue;
+      drafts.push({
+        id: parsed.id || key.replace("project_", ""),
+        title: parsed.projectTitle || "Untitled Draft",
+        fiscalYear: parsed.financialYear ? `FY ${parsed.financialYear}` : "N/A",
+        progress: 0,
+        status: "draft",
+        lastUpdated: parsed.updatedAt
+          ? new Date(parsed.updatedAt).toLocaleDateString()
+          : "N/A",
+        canEdit: true,
+        canRenew: false,
+      });
+    } catch {
+      // skip malformed entries
+    }
+  }
+  return drafts;
+};
 
 //========== My Projects Component ===========
 const MyProject: React.FC = () => {
+  const axios = useAxios();
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: "all",
   });
 
+  //========== Load Data ===========
+  const loadProjects = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("tax_project/userlist/");
+      const apiData: Record<string, string>[] = response.data?.data ?? [];
+      const apiProjects: Project[] = apiData.map((p) => ({
+        id: String(p.id),
+        title: p.project_title,
+        fiscalYear: p.financial_year ? `FY ${p.financial_year}` : "N/A",
+        progress: deriveProgress(p.status),
+        status: mapApiStatus(p.status),
+        lastUpdated: p.updated_at
+          ? new Date(p.updated_at).toLocaleDateString()
+          : "N/A",
+        canEdit: false,
+        canRenew: p.status === "completed" || p.status === "approved",
+      }));
+
+      const localDrafts = loadLocalDrafts();
+      // Exclude any local draft whose id already appears in the API list
+      const apiIds = new Set(apiProjects.map((p) => p.id));
+      const filteredDrafts = localDrafts.filter((d) => !apiIds.has(d.id));
+
+      setAllProjects([...filteredDrafts, ...apiProjects]);
+    } catch {
+      // If API fails, still show local drafts
+      setAllProjects(loadLocalDrafts());
+    } finally {
+      setIsLoading(false);
+    }
+  }, [axios]);
+
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
+
+  //========== Delete Project ===========
+  const handleDelete = useCallback(
+    async (project: Project) => {
+      if (project.canEdit) {
+        // Local draft — remove from localStorage only
+        localStorage.removeItem(`project_${project.id}`);
+        setAllProjects((prev) => prev.filter((p) => p.id !== project.id));
+      } else {
+        try {
+          await axios.delete(`tax_project/userlist/${project.id}/`);
+          setAllProjects((prev) => prev.filter((p) => p.id !== project.id));
+          toastManager.add({
+            title: "Project Deleted",
+            description: "The project has been deleted successfully.",
+            type: "success",
+          });
+        } catch {
+          toastManager.add({
+            title: "Delete Failed",
+            description: "Failed to delete the project. Please try again.",
+            type: "error",
+          });
+        }
+      }
+    },
+    [axios],
+  );
+
   //========== Filter and Search Logic ===========
   const filteredProjects = useMemo(() => {
-    return dummyProjects.filter((project) => {
-      const matchesSearch = project.title
+    return allProjects.filter((project) => {
+      const matchesSearch = (project?.title ?? "")
         .toLowerCase()
         .includes(filters.search.toLowerCase());
       const matchesStatus =
         filters.status === "all" || project.status === filters.status;
-
       return matchesSearch && matchesStatus;
     });
-  }, [filters]);
+  }, [allProjects, filters]);
 
   //========== Handle Search Input ===========
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -178,10 +219,18 @@ const MyProject: React.FC = () => {
       </div>
 
       {/*========= Projects Grid =========*/}
-      {filteredProjects.length > 0 ? (
-        <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-5 lg:gap-6 xl:gap-8 items-start">
+      {isLoading ? (
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <p className="text-gray-500">Loading projects...</p>
+        </div>
+      ) : filteredProjects.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-5 lg:gap-6 xl:gap-8 items-start">
           {filteredProjects.map((project) => (
-            <ProjectListCard key={project.id} project={project} />
+            <ProjectListCard
+              key={project.id}
+              project={project}
+              onDelete={() => handleDelete(project)}
+            />
           ))}
         </div>
       ) : (
@@ -194,8 +243,8 @@ const MyProject: React.FC = () => {
               No projects found
             </h3>
             <p className="text-gray-600">
-              Try adjusting your search or filter criteria to find what you're
-              looking for.
+              Try adjusting your search or filter criteria to find what
+              you&apos;re looking for.
             </p>
           </div>
         </div>

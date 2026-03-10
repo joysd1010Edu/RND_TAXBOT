@@ -1,21 +1,22 @@
 "use client";
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   ProjectFormData,
   CreateProjectContextType,
 } from "@/Type/UserDashboard/CreateProject";
 import { toastManager } from "@/components/ui/toast";
+import { useAxios } from "@/Hooks/useAxiosInstance";
 
 const CreateProjectContext = createContext<CreateProjectContextType | null>(
-  null
+  null,
 );
 
 export const useCreateProject = () => {
   const context = useContext(CreateProjectContext);
   if (!context) {
     throw new Error(
-      "useCreateProject must be used within CreateProjectProvider"
+      "useCreateProject must be used within CreateProjectProvider",
     );
   }
   return context;
@@ -79,11 +80,11 @@ interface CreateProjectProviderProps {
 export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
   children,
 }) => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get("id");
   const renewFromId = searchParams.get("renewFrom");
   const isEditMode = !!projectId;
+  const axios = useAxios();
 
   const [formData, setFormData] = useState<ProjectFormData>(() => {
     // If editing, load from localStorage or API
@@ -133,7 +134,7 @@ export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
       // Save to localStorage (replace with API call)
       localStorage.setItem(
         `project_${projectData.id}`,
-        JSON.stringify(projectData)
+        JSON.stringify(projectData),
       );
 
       // Show success toast
@@ -152,21 +153,58 @@ export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
   }, [formData, projectId]);
 
   //========================= Submit Project =========================
-  const submitProject = useCallback(async () => {
+  const submitProject = useCallback(async (): Promise<boolean> => {
     try {
-      const projectData: ProjectFormData = {
-        ...formData,
-        status: "under_review",
-        updatedAt: new Date().toISOString(),
-        submittedAt: new Date().toISOString(),
-        id: projectId || `project_${Date.now()}`,
-      };
+      const id = projectId || `project_${Date.now()}`;
 
-      // Save to localStorage (replace with API call)
-      localStorage.setItem(
-        `project_${projectData.id}`,
-        JSON.stringify(projectData)
+      const fd = new FormData();
+      fd.append("project_title", formData.projectTitle);
+      fd.append("brief_summary", formData.briefSummary);
+      fd.append("financial_year", formData.financialYear);
+      fd.append("project_start_date", formData.projectStartDate);
+      fd.append("project_end_date", formData.projectEndDate);
+      fd.append("industry", formData.industry);
+      fd.append("staff_members", formData.staffMembers);
+
+      for (const q of ["q1", "q2", "q3", "q4"] as const) {
+        fd.append(
+          `core_rnd_activity_${q}`,
+          formData[q].coreActivitiesDescription,
+        );
+        fd.append(`scientific_hypothesis_testing_${q}`, formData[q].hypothesis);
+        fd.append(
+          `scientific_hypothesis_existed_${q}`,
+          formData[q].uncertainty,
+        );
+        fd.append(
+          `systematic_progression_${q}`,
+          formData[q].systematicProgression,
+        );
+        fd.append(`outcomes_${q}`, formData[q].outcomes);
+        fd.append(`new_knowledge_${q}`, formData[q].newKnowledge);
+      }
+
+      fd.append("total_rnd_expenditure", formData.totalExpenditure);
+      fd.append("staff_costs", formData.staffCosts);
+      fd.append("contractor_costs", formData.contractorCosts);
+      fd.append("materials_costs", formData.materialsConsumables);
+      fd.append("equipment_costs", formData.equipmentDepreciation);
+      fd.append("other_costs", formData.otherEligibleCosts);
+
+      formData.technicalDocuments?.forEach((file) =>
+        fd.append("technical_documents", file),
       );
+      formData.financialDocuments?.forEach((file) =>
+        fd.append("financial_documents", file),
+      );
+      formData.otherDocuments?.forEach((file) =>
+        fd.append("other_documents", file),
+      );
+
+      await axios.post("tax_project/userlist/", fd);
+
+      // Remove local draft now that it's in the API
+      localStorage.removeItem(`project_${id}`);
 
       toastManager.add({
         title: "Project Submitted",
@@ -174,18 +212,28 @@ export const CreateProjectProvider: React.FC<CreateProjectProviderProps> = ({
         type: "success",
       });
 
-      // Redirect to projects list
-      setTimeout(() => {
-        router.push("/user/MyProjects");
-      }, 1500);
-    } catch (error) {
+      return true;
+    } catch (error: unknown) {
+      const axiosError = error as {
+        response?: {
+          data?: { message?: string; detail?: string; error?: string };
+        };
+      };
+      const apiMessage =
+        axiosError?.response?.data?.message ||
+        axiosError?.response?.data?.detail ||
+        axiosError?.response?.data?.error ||
+        "Failed to submit project. Please try again.";
+
       toastManager.add({
-        title: "Error",
-        description: "Failed to submit project. Please try again.",
+        title: "Submission Failed",
+        description: apiMessage,
         type: "error",
       });
+
+      return false;
     }
-  }, [formData, projectId, router]);
+  }, [formData, projectId, axios]);
 
   const contextValue: CreateProjectContextType = {
     formData,

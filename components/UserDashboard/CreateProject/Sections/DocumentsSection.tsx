@@ -18,7 +18,7 @@ const DocumentsSection = () => {
     type: "technical" | "financial" | "other"
   ) => {
     const files = Array.from(e.target.files || []);
-    const validFiles = files.filter((file) => file.size <= 10 * 1024 * 1024); // 10MB max
+    const validFiles = files.filter((file) => file.size <= 5 * 1024 * 1024); // 5MB max
 
     if (type === "technical") {
       const newFiles = [...technicalFiles, ...validFiles];

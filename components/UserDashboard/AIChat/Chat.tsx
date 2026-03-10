@@ -6,6 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from "@/components/Providers/PageTitleProvider";
 import { LuBot, LuUser } from "react-icons/lu";
+import { useAxios } from "@/Hooks/useAxiosInstance";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   id: string;
@@ -14,135 +17,22 @@ interface Message {
   timestamp: string;
 }
 
-const dummyResponses: Record<string, string> = {
-  "what costs can i claim": `Eligible R&D expenditure includes:
-
-**Staff Costs:**
-• Salaries for employees directly engaged in R&D core activities
-• Must be conducting or directly supporting core activities
-• Pro-rated if only partially engaged in R&D
-
-**Contractor Costs:**
-• Payments to contractors for R&D activities
-• Subject to specific rules and rates
-
-**Other Deductible Costs:**
-• Materials consumed in R&D
-• Depreciation on R&D equipment
-• Feedstock costs
-
-**NOT eligible:**
-• Interest expenses
-• Overheads (unless using simplified method)
-• Non-R&D activities
-• Ineligible core activities`,
-
-  "what qualifies as core r&d": `Core R&D activities must meet these criteria:
-
-1. **Purpose**: Generating new knowledge (including new or improved materials, products, devices, processes, or services)
-
-2. **Uncertainty**: The outcome cannot be known in advance based on current knowledge
-
-3. **Scientific Method**: Must apply systematic progression of work that:
-   • Is based on principles of established science
-   • Proceeds from hypothesis to experiment
-   • Uses observation and evaluation
-   • Leads to logical conclusions
-
-4. **Experimentation**: Conducted for the purpose of the experiment
-
-Examples of activities that qualify:
-• Developing new algorithms with uncertain outcomes
-• Testing new manufacturing processes with unknown efficiency
-• Creating new materials with uncertain properties`,
-
-  "technical uncertainty": `Technical uncertainty is a core requirement for R&D activities:
-
-**What it means:**
-• The outcome cannot be determined in advance using existing knowledge
-• There must be genuine scientific or technological uncertainty
-• The solution requires experimentation and testing
-
-**Requirements:**
-• Must formulate a clear hypothesis before starting
-• Hypothesis should address specific technical uncertainty
-• Must be testable through systematic experimentation
-• Should aim to generate new knowledge
-
-**Example:**
-"We hypothesized that using graphene-enhanced polymers would increase tensile strength by 40% while reducing weight by 25%, though this combination had never been achieved in existing materials science."
-
-**NOT technical uncertainty:**
-• Routine problem-solving
-• Adapting existing technology
-• Cosmetic improvements`,
-
-  "eligible costs": `R&D Tax Incentive eligible costs include:
-
-**Staff Costs** (Most Common):
-• Salaries and wages for R&D employees
-• Superannuation contributions
-• Payroll tax
-• Must be directly engaged in R&D activities
-
-**Contractor Costs**:
-• Limited to 2/3 of the actual expenditure
-• Must be for R&D activities on your behalf
-• Subject to specific registration requirements
-
-**Other Deductible Expenditure**:
-• Materials and consumables used in R&D
-• Energy costs for R&D equipment
-• Depreciation on R&D assets
-• Travel directly related to R&D
-
-**Excluded Costs**:
-• General business overheads
-• Marketing and sales expenses
-• Interest and financing costs
-• Activities not meeting R&D definition`,
-
-  default: `Thank you for your question! As your R&D compliance assistant, I can help you understand:
-
-• Australian R&D tax incentive requirements
-• What qualifies as core and supporting R&D activities
-• Eligible expenditure categories and rates
-• Technical uncertainty and hypothesis formulation
-• Documentation and compliance requirements
-
-Could you please provide more specific details about your question? For example:
-- Are you asking about eligibility criteria?
-- Do you need help with cost classifications?
-- Would you like guidance on technical documentation?
-
-Feel free to use the quick question buttons below or type your specific query!`,
-};
+interface StoredUser {
+  id?: string;
+}
 
 const Chat = () => {
   const router = useRouter();
   const { setPageTitle } = usePageTitle();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "ai",
-      content: `Hello! I'm your R&D compliance assistant. I can help you with:
-
-• Understanding Australian R&D tax incentive requirements
-• Clarifying what qualifies as core R&D activities
-• Explaining eligible expenditure categories
-• Answering questions about technical uncertainty
-• Guidance on systematic experimentation
-
-How can I help you today?`,
-      timestamp: new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const axios = useAxios();
 
   useEffect(() => {
     setPageTitle("AI Chat");
@@ -156,35 +46,158 @@ How can I help you today?`,
     scrollToBottom();
   }, [messages]);
 
-  const getAIResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase();
-
-    if (lowerMessage.includes("cost") || lowerMessage.includes("claim")) {
-      return dummyResponses["what costs can i claim"];
-    } else if (
-      lowerMessage.includes("core") ||
-      lowerMessage.includes("qualif")
-    ) {
-      return dummyResponses["what qualifies as core r&d"];
-    } else if (
-      lowerMessage.includes("uncertain") ||
-      lowerMessage.includes("hypothesis")
-    ) {
-      return dummyResponses["technical uncertainty"];
-    } else if (lowerMessage.includes("eligible")) {
-      return dummyResponses["eligible costs"];
-    } else {
-      return dummyResponses.default;
-    }
+  const addAIMessage = (content: string) => {
+    const aiResponse: Message = {
+      id: (Date.now() + 1).toString(),
+      type: "ai",
+      content,
+      timestamp: new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+    setMessages((prev) => [...prev, aiResponse]);
   };
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  //========== Fetch Chat History ===========
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await axios.get("chatbot/history/");
+        if (response.data?.success && Array.isArray(response.data.data)) {
+          const sorted = [...response.data.data].sort(
+            (a: { created_at: string }, b: { created_at: string }) =>
+              new Date(a.created_at).getTime() -
+              new Date(b.created_at).getTime(),
+          );
+          if (sorted.length === 0) {
+            setIsNewUser(true);
+          } else {
+            const historyMessages: Message[] = sorted.map(
+              (item: {
+                id: number;
+                role: string;
+                content: string;
+                created_at: string;
+              }) => ({
+                id: item.id.toString(),
+                type: item.role === "assistant" ? "ai" : "user",
+                content: item.content,
+                timestamp: new Date(item.created_at).toLocaleTimeString(
+                  "en-US",
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  },
+                ),
+              }),
+            );
+            setMessages(historyMessages);
+          }
+        } else {
+          setIsNewUser(true);
+        }
+        setIsHistoryLoaded(true);
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+        setIsNewUser(true);
+        setIsHistoryLoaded(true);
+      }
+    };
+    fetchHistory();
+  }, []);
+
+  //========== WebSocket Connection ===========
+  useEffect(() => {
+    const token =
+      localStorage.getItem("accessToken") ||
+      sessionStorage.getItem("accessToken");
+    const storedUserRaw =
+      localStorage.getItem("user") || sessionStorage.getItem("user");
+
+    if (!token || !storedUserRaw) {
+      return;
+    }
+
+    let userId: string | undefined;
+    try {
+      const storedUser = JSON.parse(storedUserRaw) as StoredUser;
+      userId = storedUser.id;
+    } catch (error) {
+      console.error("Unable to parse user data for websocket", error);
+      return;
+    }
+
+    if (!userId) {
+      return;
+    }
+
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      "https://3774-103-159-73-161.ngrok-free.app/api/";
+    const normalizedBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
+    const wsBaseUrl = normalizedBaseUrl
+      .replace(/^https:\/\//, "wss://")
+      .replace(/^http:\/\//, "ws://")
+      .replace(/\/$/, "");
+    const wsUrl = `${wsBaseUrl}/ws/chat/${userId}/?token=${encodeURIComponent(token)}`;
+
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      setIsSocketConnected(true);
+      console.log("Chat websocket connected");
+    };
+
+    ws.onmessage = (event) => {
+      setIsTyping(false);
+
+      try {
+        const parsed = JSON.parse(event.data);
+        // Expected format: { user_message: "...", ai_response: "..." }
+        const aiText = parsed.ai_response;
+
+        if (typeof aiText === "string" && aiText.trim()) {
+          addAIMessage(aiText);
+          return;
+        }
+      } catch {
+        if (typeof event.data === "string" && event.data.trim()) {
+          addAIMessage(event.data);
+          return;
+        }
+      }
+
+      console.error("Unexpected websocket response format:", event.data);
+    };
+
+    ws.onerror = (error) => {
+      setIsTyping(false);
+      console.error("Chat websocket error", error);
+    };
+
+    ws.onclose = () => {
+      setIsSocketConnected(false);
+      setIsTyping(false);
+      console.log("Chat websocket disconnected");
+    };
+
+    return () => {
+      ws.close();
+      wsRef.current = null;
+      setIsSocketConnected(false);
+    };
+  }, []);
+
+  const handleSendMessage = (overrideMessage?: string) => {
+    const textToSend = overrideMessage ?? inputValue;
+    if (!textToSend.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
-      content: inputValue,
+      content: textToSend,
       timestamp: new Date().toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
@@ -194,25 +207,25 @@ How can I help you today?`,
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsTyping(true);
-// TODO: Replace with actual AI integration ,chat timeout for demo
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content: getAIResponse(inputValue),
-        timestamp: new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
+
+    const socket = wsRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
       setIsTyping(false);
-    }, 1000);
+      addAIMessage(
+        "Chat server is not connected. Please refresh and try again.",
+      );
+      return;
+    }
+
+    socket.send(
+      JSON.stringify({
+        message: textToSend,
+      }),
+    );
   };
 
   const handleQuickQuestion = (question: string) => {
-    setInputValue(question);
-    setTimeout(() => handleSendMessage(), 100);
+    handleSendMessage(question);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -224,15 +237,14 @@ How can I help you today?`,
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      
       <div className="flex bg-gray-50 flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex-1 overflow-hidden">
         <button
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors mb-4"
-      >
-        <HiOutlineArrowLeft className="w-4 h-4" />
-        <span>Back to Dashboard</span>
-      </button>
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors mb-4"
+        >
+          <HiOutlineArrowLeft className="w-4 h-4" />
+          <span>Back to Dashboard</span>
+        </button>
         <div className="py-4 space-y-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             AI Compliance Assistant
@@ -240,10 +252,34 @@ How can I help you today?`,
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Ask questions about Australian R&D tax incentives
           </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Status: {isSocketConnected ? "Connected" : "Disconnected"}
+          </p>
         </div>
         <div className="flex-1 flex flex-col border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 p-4 sm:p-6 lg:p-8 shadow-sm overflow-hidden">
           {/*========================= Messages Container ========================= */}
           <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2">
+            {/*========== Boilerplate for new users ==========*/}
+            {isHistoryLoaded && isNewUser && messages.length === 0 && (
+              <div className="flex gap-3 justify-start">
+                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                  <LuBot size={20} className="text-white" />
+                </div>
+                <Card className="px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 max-w-[85%] sm:max-w-[75%]">
+                  <p className="text-sm leading-relaxed">{`Hello! I'm your R&D compliance assistant. I can help you with:`}</p>
+                  <ul className="text-sm mt-2 space-y-1 list-disc list-inside">
+                    <li>
+                      Understanding Australian R&D tax incentive requirements
+                    </li>
+                    <li>Clarifying what qualifies as core R&D activities</li>
+                    <li>Explaining eligible expenditure categories</li>
+                    <li>Answering questions about technical uncertainty</li>
+                    <li>Guidance on systematic experimentation</li>
+                  </ul>
+                  <p className="text-sm mt-2">How can I help you today?</p>
+                </Card>
+              </div>
+            )}
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -268,9 +304,67 @@ How can I help you today?`,
                         : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                      {message.content}
-                    </p>
+                    {message.type === "user" ? (
+                      <p className="text-sm leading-relaxed">
+                        {message.content}
+                      </p>
+                    ) : (
+                      <div className="text-sm leading-relaxed">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({ children }) => (
+                              <p className="mb-1 last:mb-0">{children}</p>
+                            ),
+                            strong: ({ children }) => (
+                              <strong className="font-semibold">
+                                {children}
+                              </strong>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="list-disc list-inside my-1 space-y-0.5">
+                                {children}
+                              </ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="list-decimal list-inside my-1 space-y-0.5">
+                                {children}
+                              </ol>
+                            ),
+                            li: ({ children }) => (
+                              <li className="ml-2">{children}</li>
+                            ),
+                            h1: ({ children }) => (
+                              <h1 className="text-base font-bold mt-2 mb-1">
+                                {children}
+                              </h1>
+                            ),
+                            h2: ({ children }) => (
+                              <h2 className="text-sm font-bold mt-2 mb-1">
+                                {children}
+                              </h2>
+                            ),
+                            h3: ({ children }) => (
+                              <h3 className="text-sm font-semibold mt-1 mb-0.5">
+                                {children}
+                              </h3>
+                            ),
+                            code: ({ children }) => (
+                              <code className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-xs font-mono">
+                                {children}
+                              </code>
+                            ),
+                            blockquote: ({ children }) => (
+                              <blockquote className="border-l-2 border-gray-400 pl-3 italic my-1">
+                                {children}
+                              </blockquote>
+                            ),
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </Card>
                   <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 px-1">
                     {message.timestamp}
@@ -330,7 +424,7 @@ How can I help you today?`,
                   rows={1}
                 />
                 <Button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage()}
                   disabled={!inputValue.trim() || isTyping}
                   className="self-end bg-purple-600 border-none cursor-pointer hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -345,34 +439,36 @@ How can I help you today?`,
               </p>
             </Card>
             {/* =================== Quick Questions ========================= */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() =>
-                  handleQuickQuestion("What qualifies as core R&D?")
-                }
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                What qualifies as core R&D?
-              </Button>
-              <Button
-                onClick={() => handleQuickQuestion("Technical uncertainty?")}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                Technical uncertainty?
-              </Button>
-              <Button
-                onClick={() => handleQuickQuestion("Eligible costs?")}
-                variant="outline"
-                size="sm"
-                className="text-xs"
-              >
-                Eligible costs?
-              </Button>
-            </div>
+            {isHistoryLoaded && isNewUser && messages.length === 0 && (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() =>
+                    handleQuickQuestion("What qualifies as core R&D?")
+                  }
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  What qualifies as core R&D?
+                </Button>
+                <Button
+                  onClick={() => handleQuickQuestion("Technical uncertainty?")}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  Technical uncertainty?
+                </Button>
+                <Button
+                  onClick={() => handleQuickQuestion("Eligible costs?")}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  Eligible costs?
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

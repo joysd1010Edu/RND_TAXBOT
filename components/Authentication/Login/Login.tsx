@@ -103,11 +103,13 @@ const Login = () => {
                   <span className="font-medium">Admin:</span> admin@admin.com
                 </p>
                 <p>
-                  <span className="font-medium">User:</span> user@gmail.com
+                  <span className="font-medium">Pass:</span> admin123##
                 </p>
                 <p>
-                  <span className="font-medium">Password:</span> admin (for
-                  admin user)
+                  <span className="font-medium">User:</span> joysutradharaj@gmail.com
+                </p>
+                <p>
+                  <span className="font-medium">Password:</span> admin123## 
                 </p>
               </div>
               <p className=" text-xs font-thin italic text-center">

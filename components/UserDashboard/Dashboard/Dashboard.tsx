@@ -10,34 +10,45 @@ import { LuCircleAlert } from "react-icons/lu";
 import { useRouter } from "next/navigation";
 import CurrentProjectView from "./CurrentProjectView";
 import PreviousProjectView from "./PreviousProjectView";
+import { useAxios } from "@/Hooks/useAxiosInstance";
 
 //========== Dashboard Component ===========
 const Dashboard = () => {
   const { setPageTitle } = usePageTitle();
   const router = useRouter();
 
-  //========== 🚧 DEV ONLY - REMOVE BEFORE PRODUCTION 🚧 ===========
-  const [showExistingUserView, setShowExistingUserView] = useState(false);
-  //========== END DEV ONLY ===========
+  const axios = useAxios();
+  const [dashboardData, setDashboardData] = useState({
+    active_projects: 0,
+    completed_projects: 0,
+    pending_projects: 0,
+  });
+  const [projects, setProjects] = useState([]);
+
+  const fetchdata = async () => {
+    try {
+      const response = await axios.get("calculations/user_dashboard/");
+      const project_response = await axios.get("/tax_project/userlist/");
+      if (response.data.success && response.data.data) {
+        setDashboardData(response.data.data);
+      }
+      if (project_response.data && project_response.data.data) {
+        setProjects(project_response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchdata();
+  }, []);
 
   useEffect(() => {
     setPageTitle("Dashboard");
   }, [setPageTitle]);
   return (
     <div className="space-y-6 lg:px-10">
-      {/* TODO: Remove the user toggle btn */}
-      {/*==========  DEV ONLY TOGGLE BUTTON - REMOVE BEFORE PRODUCTION  ==========*/}
-      <div className="fixed bottom-4 right-4 z-50">
-        <button
-          onClick={() => setShowExistingUserView(!showExistingUserView)}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow-lg font-semibold text-sm flex items-center gap-2 border-2 border-purple-800"
-        >
-          <span>🔧</span>
-          <span>{showExistingUserView ? "New User View" : "Existing User View"}</span>
-        </button>
-      </div>
-      {/*========== END DEV ONLY ==========*/}
-
       {/*========= Welcome Section =========*/}
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h2>
@@ -49,7 +60,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           title="Active Projects"
-          value={showExistingUserView ? "2" : "0"}
+          value={dashboardData.active_projects.toString()}
           icon={<MdAccessTime size={28} className="text-orange-600" />}
           bgColor="bg-orange-50"
           iconBgColor="bg-orange-100"
@@ -57,7 +68,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Completed Claims"
-          value={showExistingUserView ? "1" : "0"}
+          value={dashboardData.completed_projects.toString()}
           icon={<FiCheckCircle size={28} className="text-green-600" />}
           bgColor="bg-green-50"
           iconBgColor="bg-green-100"
@@ -65,7 +76,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Pending Review"
-          value={showExistingUserView ? "1" : "0"}
+          value={dashboardData.pending_projects.toString()}
           icon={<LuCircleAlert size={28} className="text-blue-600" />}
           bgColor="bg-blue-50"
           iconBgColor="bg-blue-100"
@@ -76,7 +87,7 @@ const Dashboard = () => {
       <ProjectCard
         title="Current Year R&D Project (2025)"
         description=""
-        isEmpty={!showExistingUserView}
+        isEmpty={projects.length === 0}
         emptyMessage="No R&D project has been created for 2025. Start a new project to begin your R&D tax incentive submission."
         actionButton={
           <button
@@ -87,14 +98,14 @@ const Dashboard = () => {
           </button>
         }
       >
-        {showExistingUserView && <CurrentProjectView />}
+        <CurrentProjectView />
       </ProjectCard>
 
       {/*========= Previous R&D Project =========*/}
       <ProjectCard
         title="Previous R&D Projects"
         description=""
-        isEmpty={!showExistingUserView}
+        isEmpty={projects.length === 0}
         emptyMessage="You don't have any previous R&D project. Your older submissions will appear here once available."
         headerAction={
           <Link
@@ -106,7 +117,7 @@ const Dashboard = () => {
           </Link>
         }
       >
-        {showExistingUserView && <PreviousProjectView />}
+        {projects.length > 0 && <PreviousProjectView projects={projects} />}
       </ProjectCard>
     </div>
   );

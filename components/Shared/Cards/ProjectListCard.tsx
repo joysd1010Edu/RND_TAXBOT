@@ -8,16 +8,18 @@ import {
   MdRefresh,
   MdCalendarToday,
   MdTrendingUp,
+  MdDeleteOutline,
 } from "react-icons/md";
 import { FaFileAlt } from "react-icons/fa";
 import { Project } from "@/Type/UserDashboard/MyProject";
 
 interface ProjectCardProps {
   project: Project;
+  onDelete?: () => void;
 }
 
 //========== Project Card Component ===========
-const ProjectListCard: React.FC<ProjectCardProps> = ({ project }) => {
+const ProjectListCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
   const router = useRouter();
 
   const handleViewProject = () => {
@@ -64,7 +66,6 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project }) => {
         return "Unknown";
     }
   };
-
   return (
     <div className="bg-white rounded-xl w-full border border-gray-200 p-6 hover:shadow-lg transition-shadow h-full flex flex-col">
       {/*========= Card Header =========*/}
@@ -112,14 +113,14 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project }) => {
       </p>
 
       {/*========= Action Buttons =========*/}
-      <div className="flex gap-2 mt-auto">
+      <div className="flex gap-2 mt-auto flex-wrap">
         {project.canEdit ? (
           <button
             onClick={handleEditProject}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <MdEdit size={18} />
-            <span>Edit Project</span>
+            <span>Edit</span>
           </button>
         ) : (
           <>
@@ -128,18 +129,27 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project }) => {
               className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2"
             >
               <MdRemoveRedEye size={18} />
-              <span>View Only</span>
+              <span>View</span>
             </button>
             {project.canRenew && (
               <button
                 onClick={handleRenewProject}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <MdRefresh size={18} />
                 <span>Renew</span>
               </button>
             )}
           </>
+        )}
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <MdDeleteOutline size={18} />
+            <span>Delete</span>
+          </button>
         )}
       </div>
     </div>

@@ -58,7 +58,7 @@ export interface CreateProjectContextType {
   totalSteps: number;
   completionPercentage: number;
   saveDraft: () => Promise<void>;
-  submitProject: () => Promise<void>;
+  submitProject: () => Promise<boolean>;
   isEditMode: boolean;
   projectId?: string;
 }
