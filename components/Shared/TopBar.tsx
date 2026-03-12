@@ -23,6 +23,8 @@ const TopBar: React.FC<TopBarProps> = ({
   isCollapsed,
   isNotificationOpen,
   setIsNotificationOpen,
+  unreadCount,
+  onUnreadCountChange,
 }) => {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -50,7 +52,8 @@ const TopBar: React.FC<TopBarProps> = ({
   };
 
   const handleProfile = () => {
-    if (user?.role === "admin" || user?.role?.toLowerCase() === "superadmin") router.push("/Admin/settings");
+    if (user?.role === "admin" || user?.role?.toLowerCase() === "superadmin")
+      router.push("/Admin/settings");
     else router.push("/user/settings");
     setIsDropdownOpen(false);
   };
@@ -92,9 +95,10 @@ const TopBar: React.FC<TopBarProps> = ({
             aria-label="Notifications"
           >
             <MdNotifications size={24} className="text-gray-600" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            {(unreadCount ?? 0) > 0 && (
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            )}
           </button>
-        
 
           {/*========= User Profile Dropdown =========*/}
           <div className="relative" ref={dropdownRef}>
@@ -109,9 +113,7 @@ const TopBar: React.FC<TopBarProps> = ({
                 <p className="text-sm font-semibold text-gray-900">
                   {user?.full_name || "User"}
                 </p>
-                <p className="text-xs text-gray-500">
-                  {user?.email || "N/A"}
-                </p>
+                <p className="text-xs text-gray-500">{user?.email || "N/A"}</p>
               </div>
               <MdKeyboardArrowDown
                 size={20}
@@ -162,6 +164,7 @@ const TopBar: React.FC<TopBarProps> = ({
       <NotificationPanel
         isOpen={isNotificationOpen ?? false}
         onClose={() => setIsNotificationOpen?.(false)}
+        onUnreadCountChange={onUnreadCountChange}
       />
     </header>
   );

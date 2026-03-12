@@ -35,6 +35,7 @@ interface NavbarProps {
   setIsCollapsed: (value: boolean) => void;
   isNotificationOpen?: boolean;
   setIsNotificationOpen?: (value: boolean) => void;
+  unreadCount?: number;
 }
 
 //========== Navbar Component ===========
@@ -46,6 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({
   setIsCollapsed,
   isNotificationOpen,
   setIsNotificationOpen,
+  unreadCount,
 }) => {
   const pathname = usePathname();
   const router = useRouter();
@@ -131,7 +133,8 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   const handleProfile = () => {
-    router.push("/Profile");
+    if (user?.role === "admin" || user?.role?.toLowerCase() === "superadmin") router.push("/Admin/settings");
+    else router.push("/user/settings");
     setIsDropdownOpen(false);
     setIsSidebarOpen(false);
   };
@@ -207,7 +210,9 @@ const Navbar: React.FC<NavbarProps> = ({
             className="relative p-2 hover:bg-white/10 rounded-full transition-colors w-10 mx-auto flex items-center justify-center gap-1"
           >
             <MdNotifications size={24} />
-            <span className="absolute top-1 left-7 w-2 h-2 bg-red-500 rounded-full"></span>
+            {(unreadCount ?? 0) > 0 && (
+              <span className="absolute top-1 left-7 w-2 h-2 bg-red-500 rounded-full"></span>
+            )}
           </button>
 
           {/*========= User Profile Dropdown =========*/}

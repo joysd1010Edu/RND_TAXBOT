@@ -5,18 +5,21 @@ export interface TopBarProps {
   isCollapsed: boolean;
   isNotificationOpen?: boolean;
   setIsNotificationOpen?: (value: boolean) => void;
+  unreadCount?: number;
+  onUnreadCountChange?: (count: number) => void;
 }
 
 export interface Notification {
-  id: string;
-  type: "info" | "warning" | "error";
+  id: number;
+  user: number;
   title: string;
-  description: string;
-  timestamp: string;
-  isRead: boolean;
+  message: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface NotificationPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onUnreadCountChange?: (count: number) => void;
 }

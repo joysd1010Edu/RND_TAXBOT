@@ -6,7 +6,6 @@ import AnalyticsStatCard from "./AnalyticsStatCard";
 import UserEngagementChart from "./UserEngagementChart";
 import IncompleteSectionsChart from "./IncompleteSectionsChart";
 import CompletionTimeChart from "./CompletionTimeChart";
-import RejectedSectionsChart from "./RejectedSectionsChart";
 import IncompleteUsersTable from "./IncompleteUsersTable";
 import type { IncompleteUser } from "@/Type/AdminDashboard/Analytics";
 import { LuUserMinus, LuUsers } from "react-icons/lu";
@@ -30,31 +29,31 @@ const Analysis = () => {
     setPageTitle("Analytics & Reporting");
   }, [setPageTitle]);
   const axios = useAxios();
-  
-    useEffect(() => {
-      const fetchStats = async () => {
-        try {
-          const response = await axios.get("calculations/admin_dashboard/");
-          const data = {
-            totalUsers: response.data.data.total_users,
-            active_projects: response.data.data.active_projects,
-            pendingReviews: response.data.data.pending_projects,
-            inactive_users: response.data.data.inactive_users,
-            active_users: response.data.data.active_users,
-            completed_projects: response.data.data.completed_projects,
-          };
-          setstatistics(data);
-        } catch (error) {
-          console.error("Error fetching stats:", error);
-          toastManager.add({
-            title: "Error",
-            description:
-              "Failed to load dashboard statistics. Please try again later.",
-          });
-        }
-      };
-      fetchStats();
-    }, []);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get("calculations/admin_dashboard/");
+        const data = {
+          totalUsers: response.data.data.total_users,
+          active_projects: response.data.data.active_projects,
+          pendingReviews: response.data.data.pending_projects,
+          inactive_users: response.data.data.inactive_users,
+          active_users: response.data.data.active_users,
+          completed_projects: response.data.data.completed_projects,
+        };
+        setstatistics(data);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        toastManager.add({
+          title: "Error",
+          description:
+            "Failed to load dashboard statistics. Please try again later.",
+        });
+      }
+    };
+    fetchStats();
+  }, []);
 
   //========== Stats Data ==========
   const stats = [
@@ -78,7 +77,7 @@ const Analysis = () => {
       bgColor: "bg-orange-50",
       iconColor: "text-orange-600",
     },
-   
+
     {
       id: "4",
       icon: <IoWarningOutline size={24} />,
@@ -181,13 +180,12 @@ const Analysis = () => {
         <IncompleteSectionsChart />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1  gap-6">
         <CompletionTimeChart />
-        <RejectedSectionsChart />
       </div>
 
       {/*========== Incomplete Users Table ==========*/}
-      <IncompleteUsersTable users={incompleteUsers} />
+      {/* <IncompleteUsersTable users={incompleteUsers} /> */}
     </div>
   );
 };

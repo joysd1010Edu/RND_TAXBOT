@@ -9,7 +9,9 @@ import {
   HiOutlineUsers,
   HiOutlineCurrencyDollar,
   HiOutlineDocumentArrowDown,
+  HiOutlineStar,
 } from "react-icons/hi2";
+import { HiStar } from "react-icons/hi2";
 import { useAxios } from "@/Hooks/useAxiosInstance";
 import { toastManager } from "@/components/ui/toast";
 
@@ -103,6 +105,15 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRenewing, setIsRenewing] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [ratings, setRatings] = useState({
+    q1_rating: 0,
+    q2_rating: 0,
+    q3_rating: 0,
+    q4_rating: 0,
+    others_rating: 0,
+  });
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   //========== Fetch PDF as Blob (only for approved PDFs) ==========
   const fetchPdfBlob = useCallback(
@@ -184,6 +195,36 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
       });
     } finally {
       setIsRenewing(false);
+    }
+  };
+
+  //========== Submit Feedback ==========
+  const handleSubmitFeedback = async (pdfId: number) => {
+    if (Object.values(ratings).some((r) => r === 0)) {
+      toastManager.add({
+        type: "error",
+        title: "Incomplete Ratings",
+        description: "Please provide a rating (1-5) for all categories.",
+      });
+      return;
+    }
+    setIsSubmittingFeedback(true);
+    try {
+      await axios.post(`tax_project/userlist/${pdfId}/rate/`, ratings);
+      toastManager.add({
+        type: "success",
+        title: "Feedback Submitted",
+        description: "Thank you for your feedback!",
+      });
+      setFeedbackSubmitted(true);
+    } catch {
+      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: "Failed to submit feedback.",
+      });
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   };
 
@@ -493,6 +534,78 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
           <p className="text-lg text-gray-500">No documents uploaded.</p>
         )}
       </div>
+
+      {/*========== Feedback Section (shown only when status is completed) ==========*/}
+      {project.status.toLowerCase() === "completed" &&
+        approvedPdf &&
+        !feedbackSubmitted && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+              Rate Your R&D Report
+            </h2>
+            <p className="text-base text-gray-500 mb-6">
+              Please rate each section of your report from 1 to 5 stars.
+            </p>
+            <div className="space-y-5">
+              {[
+                { key: "q1_rating" as const, label: "Q1 Activities" },
+                { key: "q2_rating" as const, label: "Q2 Activities" },
+                { key: "q3_rating" as const, label: "Q3 Activities" },
+                { key: "q4_rating" as const, label: "Q4 Activities" },
+                { key: "others_rating" as const, label: "Other Aspects" },
+              ].map((item) => (
+                <div
+                  key={item.key}
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4"
+                >
+                  <p className="text-lg font-medium text-gray-700 w-40 shrink-0">
+                    {item.label}
+                  </p>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() =>
+                          setRatings((prev) => ({ ...prev, [item.key]: star }))
+                        }
+                        className="p-1 transition-colors"
+                      >
+                        {star <= ratings[item.key] ? (
+                          <HiStar size={28} className="text-yellow-400" />
+                        ) : (
+                          <HiOutlineStar
+                            size={28}
+                            className="text-gray-300 hover:text-yellow-300"
+                          />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => handleSubmitFeedback(approvedPdf.id)}
+              disabled={isSubmittingFeedback}
+              className="mt-6 flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg text-lg font-medium transition-colors"
+            >
+              {isSubmittingFeedback ? "Submitting..." : "Submit Feedback"}
+            </button>
+          </div>
+        )}
+
+      {project.status.toLowerCase() === "completed" && feedbackSubmitted && (
+        <div className="bg-green-50 rounded-xl border border-green-200 p-6 text-center">
+          <HiStar size={36} className="text-green-600 mx-auto mb-2" />
+          <h2 className="text-xl font-semibold text-green-800">
+            Thank you for your feedback!
+          </h2>
+          <p className="text-base text-green-600 mt-1">
+            Your ratings have been submitted successfully.
+          </p>
+        </div>
+      )}
 
       {/*========== Timestamps ==========*/}
       <div className="text-lg text-gray-400 flex gap-6">
