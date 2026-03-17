@@ -27,21 +27,21 @@ const Settings = () => {
       label: "Admin Accounts",
       icon: HiOutlineUserGroup,
     },
-    {
-      id: "compliance" as TabType,
-      label: "Compliance Rules",
-      icon: HiOutlineShieldCheck,
-    },
-    {
-      id: "questions" as TabType,
-      label: "AI Questions",
-      icon: HiOutlineDocumentText,
-    },
-    {
-      id: "email" as TabType,
-      label: "Email Templates",
-      icon: HiOutlineEnvelope,
-    },
+    // {
+    //   id: "compliance" as TabType,
+    //   label: "Compliance Rules",
+    //   icon: HiOutlineShieldCheck,
+    // },
+    // {
+    //   id: "questions" as TabType,
+    //   label: "AI Questions",
+    //   icon: HiOutlineDocumentText,
+    // },
+    // {
+    //   id: "email" as TabType,
+    //   label: "Email Templates",
+    //   icon: HiOutlineEnvelope,
+    // },
   ];
 
   return (
@@ -89,9 +89,9 @@ const Settings = () => {
       {/*========== Tab Content ==========*/}
       <div className="pb-8">
         {activeTab === "admin" && <AdminAccountsTab />}
-        {activeTab === "compliance" && <ComplianceRulesTab />}
+        {/* {activeTab === "compliance" && <ComplianceRulesTab />}
         {activeTab === "questions" && <AIQuestionsTab />}
-        {activeTab === "email" && <EmailTemplatesTab />}
+        {activeTab === "email" && <EmailTemplatesTab />} */}
       </div>
     </div>
   );
