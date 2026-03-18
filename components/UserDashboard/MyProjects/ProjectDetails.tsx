@@ -122,6 +122,7 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
         const pathname = new URL(pdfFileUrl).pathname;
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_PDF_DOWNLOAD_BASE_URL}${pathname}`,
+
           { responseType: "blob" },
         );
         const blob = new Blob([response.data], { type: "application/pdf" });
