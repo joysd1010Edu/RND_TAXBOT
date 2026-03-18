@@ -8,38 +8,23 @@ async function resolvePath(context: RouteContext) {
   return path;
 }
 
-export async function GET(
-  request: NextRequest,
-  context: RouteContext,
-) {
+export async function GET(request: NextRequest, context: RouteContext) {
   return proxyRequest(request, await resolvePath(context));
 }
 
-export async function POST(
-  request: NextRequest,
-  context: RouteContext,
-) {
+export async function POST(request: NextRequest, context: RouteContext) {
   return proxyRequest(request, await resolvePath(context));
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: RouteContext,
-) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   return proxyRequest(request, await resolvePath(context));
 }
 
-export async function PATCH(
-  request: NextRequest,
-  context: RouteContext,
-) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   return proxyRequest(request, await resolvePath(context));
 }
 
-export async function DELETE(
-  request: NextRequest,
-  context: RouteContext,
-) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   return proxyRequest(request, await resolvePath(context));
 }
 
