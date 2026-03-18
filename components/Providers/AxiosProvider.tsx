@@ -22,7 +22,7 @@ interface ExtendedInternalAxiosRequestConfig extends InternalAxiosRequestConfig 
 export const AxiosProvider: React.FC<AxiosProviderProps> = ({
   children,
   baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "https://3774-103-159-73-161.ngrok-free.app/api/",
+    "http://31.97.145.112/api/",
 }) => {
   //========== Track document visibility ===========
   const isTabActiveRef = React.useRef(true);
