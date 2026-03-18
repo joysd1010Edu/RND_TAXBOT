@@ -196,7 +196,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
               }
 
               const response = await axios.post(
-                `${resolvedBaseURL.replace(/\/$/, "")}/users/refresh-token`,
+                `${resolvedBaseURL.replace(/\/$/, "")}/users/refresh-token/`,
                 { token: refreshToken },
                 {
                   timeout: 5000,
