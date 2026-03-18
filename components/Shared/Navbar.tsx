@@ -28,7 +28,7 @@ interface NavItem {
 }
 
 interface NavbarProps {
-  userRole?: "superadmin" | "admin" | "user";
+  userRole?: "superadmin" | "reviewer" | "user";
   isSidebarOpen: boolean;
   setIsSidebarOpen: (value: boolean) => void;
   isCollapsed: boolean;
@@ -77,7 +77,7 @@ const Navbar: React.FC<NavbarProps> = ({
       href: "/Admin/projectManagement",
       icon: <MdFolder size={20} />,
     },
-    
+
     {
       label: "Settings",
       href: "/Admin/settings",
@@ -109,7 +109,12 @@ const Navbar: React.FC<NavbarProps> = ({
     },
   ];
 
-  const navItems = userRole === "admin" ? adminNavItems : userRole === "superadmin" ? adminNavItems : userNavItems;
+  const navItems =
+    userRole === "reviewer"
+      ? adminNavItems
+      : userRole === "superadmin"
+        ? adminNavItems
+        : userNavItems;
 
   //========== Close Dropdown on Outside Click ===========
   useEffect(() => {
@@ -133,7 +138,11 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   const handleProfile = () => {
-    if (user?.role === "admin" || user?.role?.toLowerCase() === "superadmin") router.push("/Admin/settings");
+    if (
+      user?.role?.toLowerCase() === "reviewer" ||
+      user?.role?.toLowerCase() === "superadmin"
+    )
+      router.push("/Admin/settings");
     else router.push("/user/settings");
     setIsDropdownOpen(false);
     setIsSidebarOpen(false);
