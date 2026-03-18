@@ -133,13 +133,8 @@ const Chat = () => {
     }
 
     const apiBaseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL || `${window.location.origin}/api/`;
-
-    const safeApiBaseUrl =
-      window.location.protocol === "https:" && apiBaseUrl.startsWith("http://")
-        ? `${window.location.origin}/api/`
-        : apiBaseUrl;
-    const normalizedBaseUrl = safeApiBaseUrl.replace(/\/api\/?$/, "");
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://31.97.145.112/api/";
+    const normalizedBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
     const wsBaseUrl = normalizedBaseUrl
       .replace(/^https:\/\//, "wss://")
       .replace(/^http:\/\//, "ws://")

@@ -21,30 +21,8 @@ interface ExtendedInternalAxiosRequestConfig extends InternalAxiosRequestConfig 
 //========== Axios Provider Component ===========
 export const AxiosProvider: React.FC<AxiosProviderProps> = ({
   children,
-  baseURL = process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://31.97.145.112/api/",
 }) => {
-  const resolvedBaseURL = useMemo(() => {
-    const trimmedBaseURL = baseURL?.trim();
-
-    // Use same-origin API proxy by default so browser requests stay HTTPS.
-    if (!trimmedBaseURL) {
-      return "/api/";
-    }
-
-    if (
-      typeof window !== "undefined" &&
-      window.location.protocol === "https:" &&
-      trimmedBaseURL.startsWith("http://")
-    ) {
-      console.warn(
-        "Blocked insecure NEXT_PUBLIC_API_BASE_URL on HTTPS page. Falling back to /api/.",
-      );
-      return "/api/";
-    }
-
-    return trimmedBaseURL;
-  }, [baseURL]);
-
   //========== Track document visibility ===========
   const isTabActiveRef = React.useRef(true);
 
@@ -62,7 +40,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
   //========== Create Axios Instance (memoized to prevent infinite re-renders) ===========
   const axiosInstance = useMemo(() => {
     const instance = axios.create({
-      baseURL: resolvedBaseURL,
+      baseURL,
       timeout: 60000,
       headers: {
         "ngrok-skip-browser-warning": "true",
@@ -196,7 +174,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
               }
 
               const response = await axios.post(
-                `${resolvedBaseURL.replace(/\/$/, "")}/users/refresh-token/`,
+                `${baseURL}/users/refresh-token`,
                 { token: refreshToken },
                 {
                   timeout: 5000,
@@ -247,7 +225,7 @@ export const AxiosProvider: React.FC<AxiosProviderProps> = ({
 
     return instance;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolvedBaseURL]);
+  }, [baseURL]);
 
   return (
     <AxiosContext.Provider value={axiosInstance}>
