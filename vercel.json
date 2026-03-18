@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    
+    {
+      "source": "/media/:path*",
+      "destination": "http://31.97.145.112/media/:path*"
+    }
+  ]
+}

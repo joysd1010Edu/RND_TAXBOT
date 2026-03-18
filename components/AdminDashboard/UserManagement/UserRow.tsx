@@ -37,9 +37,9 @@ const UserRow: React.FC<UserRowProps> = ({
   //========== Derive status from API flags ==========
   const status = user.is_suspended
     ? "suspended"
-    : user.is_active
-      ? "active"
-      : "pending";
+    : user.is_pending
+      ? "pending"
+      : "active";
 
   //========== Get Status Badge Color ==========
   const getStatusColor = (status: string) => {

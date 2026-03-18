@@ -133,8 +133,7 @@ const Chat = () => {
     }
 
     const apiBaseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      "https://3774-103-159-73-161.ngrok-free.app/api/";
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://31.97.145.112/api/";
     const normalizedBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
     const wsBaseUrl = normalizedBaseUrl
       .replace(/^https:\/\//, "wss://")

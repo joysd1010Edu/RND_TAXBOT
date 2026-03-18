@@ -57,8 +57,10 @@ const Dashboard = () => {
     {
       id: "1",
       icon: <HiOutlineUsers size={24} className="text-blue-600" />,
-      value: Statistics?.totalUsers||0,
+      value: Statistics?.totalUsers || 0,
       label: "Total Users",
+      change: "12",
+      changeType: "positive" as const,
       bgColor: "bg-blue-50",
       iconBgColor: "bg-white",
     },
@@ -67,6 +69,8 @@ const Dashboard = () => {
       icon: <HiOutlineFolder size={24} className="text-green-600" />,
       value: Statistics?.active_projects || 0,
       label: "Active Projects",
+      change: "8",
+      changeType: "positive" as const,
       bgColor: "bg-green-50",
       iconBgColor: "bg-white",
     },
@@ -75,6 +79,7 @@ const Dashboard = () => {
       icon: <HiOutlineClock size={24} className="text-orange-600" />,
       value: Statistics?.pendingReviews || 0,
       label: "Pending Reviews",
+      change: "5",
       changeType: "negative" as const,
       bgColor: "bg-orange-50",
       iconBgColor: "bg-white",
@@ -84,6 +89,8 @@ const Dashboard = () => {
       icon: <HiOutlineExclamationCircle size={24} className="text-red-600" />,
       value: Statistics?.inactive_users || 0,
       label: "Inactive Users",
+      change: "3",
+      changeType: "negative" as const,
       bgColor: "bg-red-50",
       iconBgColor: "bg-white",
     },
@@ -92,6 +99,8 @@ const Dashboard = () => {
       icon: <HiOutlineDocumentText size={24} className="text-purple-600" />,
       value: Statistics?.active_users || 0,
       label: "Active Users",
+      change: "15",
+      changeType: "positive" as const,
       bgColor: "bg-purple-50",
       iconBgColor: "bg-white",
     },
@@ -100,6 +109,8 @@ const Dashboard = () => {
       icon: <HiOutlineTrendingUp size={24} className="text-blue-600" />,
       value: `${Statistics?.completed_projects || 0}`,
       label: "Completed Projects",
+      change: "10",
+      changeType: "positive" as const,
       bgColor: "bg-blue-50",
       iconBgColor: "bg-white",
     },
@@ -122,7 +133,7 @@ const Dashboard = () => {
       description: "Review and approve projects",
       href: "/Admin/projectManagement",
       iconColor: "text-green-600",
-    },    
+    },
     {
       id: "4",
       icon: <HiOutlineCog size={24} />,
@@ -191,6 +202,8 @@ const Dashboard = () => {
             icon={stat.icon}
             value={stat.value}
             label={stat.label}
+            change={stat.change}
+            changeType={stat.changeType}
             bgColor={stat.bgColor}
             iconBgColor={stat.iconBgColor}
           />
@@ -215,7 +228,7 @@ const Dashboard = () => {
       </div>
 
       {/*========== Recent Activity ==========*/}
-      <div className="bg-white  rounded-xl shadow-sm border border-gray-200 p-6">
+      {/* <div className="bg-white  rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-6">
           Recent Activity
         </h2>
@@ -230,7 +243,7 @@ const Dashboard = () => {
             />
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

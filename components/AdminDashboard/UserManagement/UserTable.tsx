@@ -10,6 +10,15 @@ import type {
 } from "@/Type/AdminDashboard/UserManagement";
 import { toastManager } from "@/components/ui/toast";
 import { useAxios } from "@/Hooks/useAxiosInstance";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 //========== User Table Component ==========
 const UserTable: React.FC = () => {
@@ -18,6 +27,8 @@ const UserTable: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [users, setUsers] = useState<User[]>([]);
   const fetchUsers = async () => {
@@ -48,6 +59,35 @@ const UserTable: React.FC = () => {
 
   //========== Handle Add User ==========
   const handleAddUser = async (userData: AddUserFormData) => {
+    const tempId = Date.now();
+    const optimisticUser: User = {
+      id: tempId,
+      email: userData.email,
+      full_name: userData.full_name,
+      company: null,
+      company_size: null,
+      abn: null,
+      city: null,
+      state: null,
+      post_code: null,
+      street_address: null,
+      phone: null,
+      website: null,
+      industry: null,
+      fiscal_year_end: null,
+      role: "user",
+      is_active: false,
+      is_pending: true,
+      is_staff: false,
+      is_superuser: false,
+      is_suspended: false,
+      date_joined: new Date().toISOString(),
+      last_login: "",
+      tax_projects: 0,
+    };
+
+    setUsers((prev) => [optimisticUser, ...prev]);
+
     try {
       const body = {
         email: userData.email,
@@ -57,16 +97,36 @@ const UserTable: React.FC = () => {
       };
 
       const response = await axios.post("users/user/", body);
-      const newUser: User = response.data;
+      const raw = response?.data?.data ?? response?.data ?? {};
+      // Some APIs wrap the created user in a data/user field; unwrap conservatively.
+      const savedUser: User = (raw as any).user ?? raw;
 
-      setUsers([newUser, ...users]);
+      const mergedUser: User = {
+        ...optimisticUser,
+        ...savedUser,
+        id:
+          (savedUser as any).id ??
+          (savedUser as any).user_id ??
+          (savedUser as any).pk ??
+          optimisticUser.id,
+        full_name:
+          savedUser.full_name ?? (savedUser as any).name ?? userData.full_name,
+        email:
+          savedUser.email ?? (savedUser as any).user_email ?? userData.email,
+      };
+
+      setUsers((prev) => prev.map((u) => (u.id === tempId ? mergedUser : u)));
+      // Fetch fresh list to sync any derived fields from backend (e.g., status)
+      fetchUsers();
 
       toastManager.add({
         type: "success",
         title: "User Added",
-        description: `${newUser.full_name} has been successfully added to the system`,
+        description: `${savedUser.full_name} has been successfully added to the system`,
       });
     } catch (error: any) {
+      setUsers((prev) => prev.filter((u) => u.id !== tempId));
+
       const errData = error?.response?.data?.error;
       let message = "Failed to add user. Please try again.";
 
@@ -90,8 +150,8 @@ const UserTable: React.FC = () => {
   //========== Derive display status from API flags ==========
   const getUserStatus = (user: User): "active" | "suspended" | "pending" => {
     if (user.is_suspended) return "suspended";
-    if (user.is_active) return "active";
-    return "pending";
+    if (user.is_pending) return "pending";
+    return "active";
   };
 
   //========== Filter Users ==========
@@ -109,7 +169,6 @@ const UserTable: React.FC = () => {
   const handleViewProfile = (userId: number) => {
     router.push(`/Admin/userManagement/${userId}`);
   };
-
 
   const handleSuspendAccount = async (user: User) => {
     const response = await axios.put(`users/suspend-user/${user.id}/`);
@@ -147,23 +206,39 @@ const UserTable: React.FC = () => {
     }
   };
 
-  const handleDeleteUser =async (user: User) => {
-    const response = await axios.delete(`users/user/${user.id}/`);
-    if (response.status === 200 || response.status === 204) {
-      fetchUsers();toastManager.add({
-      type: "success",
-      title: "User Deleted",
-      description: `${user.full_name} has been removed from the system`,
-    });
-    } else {      toastManager.add({
+  const handleDeleteUser = (user: User) => {
+    setPendingDelete(user);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!pendingDelete) return;
+    try {
+      setIsDeleting(true);
+      const response = await axios.delete(`users/user/${pendingDelete.id}/`);
+      if (response.status === 200 || response.status === 204) {
+        fetchUsers();
+        toastManager.add({
+          type: "success",
+          title: "User Deleted",
+          description: `${pendingDelete.full_name} has been removed from the system`,
+        });
+      } else {
+        toastManager.add({
+          type: "error",
+          title: "Error",
+          description: `Failed to delete ${pendingDelete.full_name}. Please try again.`,
+        });
+      }
+    } catch {
+      toastManager.add({
         type: "error",
         title: "Error",
-        description: `Failed to delete ${user.full_name}. Please try again.`,
+        description: `Failed to delete ${pendingDelete.full_name}. Please try again.`,
       });
-      return;
+    } finally {
+      setIsDeleting(false);
+      setPendingDelete(null);
     }
-
-    
   };
 
   return (
@@ -208,8 +283,8 @@ const UserTable: React.FC = () => {
       </div>
 
       {/*========== User Table ==========*/}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 ">
+        <div className="">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
@@ -242,7 +317,6 @@ const UserTable: React.FC = () => {
                   key={user.id}
                   user={user}
                   onViewProfile={handleViewProfile}
-                 
                   onSuspendAccount={handleSuspendAccount}
                   onUnsuspendAccount={handleUnsuspendAccount}
                   onDeleteUser={handleDeleteUser}
@@ -266,6 +340,38 @@ const UserTable: React.FC = () => {
         onClose={() => setIsAddUserModalOpen(false)}
         onAddUser={handleAddUser}
       />
+
+      {/* Delete Confirmation */}
+      <Dialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete user?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The user{" "}
+              {pendingDelete?.full_name || ""} will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setPendingDelete(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteUser}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

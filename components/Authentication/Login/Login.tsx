@@ -93,7 +93,7 @@ const Login = () => {
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-4 sm:space-y-5"
           >
-            {/*========= Demo Credentials Notice =========*/}
+            {/* ========= Demo Credentials Notice =========
             <div className="p-4 bg-blue-500/20 border border-blue-300/30 rounded-lg text-white text-sm">
               <p className="font-semibold mb-2 text-blue-100">
                 Demo Credentials:
@@ -116,7 +116,7 @@ const Login = () => {
                 ** for testing demo only ** <br /> while development completed
                 this section will not be available{" "}
               </p>
-            </div>
+            </div> */}
 
             {/*========= Email Field =========*/}
             <div>

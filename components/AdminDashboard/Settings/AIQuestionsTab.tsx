@@ -5,6 +5,15 @@ import AIQuestionCard from "./AIQuestionCard";
 import AddQuestionModal from "./AddQuestionModal";
 import type { AIQuestion } from "@/Type/AdminDashboard/Settings";
 import { toastManager } from "@/components/ui/toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 //========== AI Questions Tab Component ==========
 const AIQuestionsTab: React.FC = () => {
@@ -29,6 +38,7 @@ const AIQuestionsTab: React.FC = () => {
     },
   ]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   //========== Handle Actions ==========
   const handleAddQuestion = (newQuestion: Omit<AIQuestion, "id">) => {
@@ -45,12 +55,18 @@ const AIQuestionsTab: React.FC = () => {
   };
 
   const handleDeleteQuestion = (id: string) => {
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
+    setPendingDeleteId(id);
+  };
+
+  const confirmDeleteQuestion = () => {
+    if (!pendingDeleteId) return;
+    setQuestions((prev) => prev.filter((q) => q.id !== pendingDeleteId));
     toastManager.add({
       type: "error",
       title: "Question Deleted",
       description: "AI question has been removed",
     });
+    setPendingDeleteId(null);
   };
 
   const handleSaveQuestions = () => {
@@ -104,12 +120,35 @@ const AIQuestionsTab: React.FC = () => {
 
       {/*========== Modal ==========*/}
       <div>
-          <AddQuestionModal
-            isOpen={isAddModalOpen}
-            onClose={() => setIsAddModalOpen(false)}
-            onAdd={handleAddQuestion}
-          />
+        <AddQuestionModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onAdd={handleAddQuestion}
+        />
       </div>
+
+      <Dialog
+        open={!!pendingDeleteId}
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete question?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The selected AI question will be
+              removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setPendingDeleteId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteQuestion}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

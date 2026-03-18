@@ -5,6 +5,15 @@ import ComplianceRuleCard from "./ComplianceRuleCard";
 import AddRuleModal from "./AddRuleModal";
 import type { ComplianceRule } from "@/Type/AdminDashboard/Settings";
 import { toastManager } from "@/components/ui/toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 //========== Compliance Rules Tab Component ==========
 const ComplianceRulesTab: React.FC = () => {
@@ -33,6 +42,7 @@ const ComplianceRulesTab: React.FC = () => {
     },
   ]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   //========== Handle Actions ==========
   const handleAddRule = (newRule: Omit<ComplianceRule, "id">) => {
@@ -50,17 +60,23 @@ const ComplianceRulesTab: React.FC = () => {
 
   const handleUpdateRule = (id: string, value: string) => {
     setRules((prev) =>
-      prev.map((rule) => (rule.id === id ? { ...rule, value } : rule))
+      prev.map((rule) => (rule.id === id ? { ...rule, value } : rule)),
     );
   };
 
   const handleDeleteRule = (id: string) => {
-    setRules((prev) => prev.filter((rule) => rule.id !== id));
+    setPendingDeleteId(id);
+  };
+
+  const confirmDeleteRule = () => {
+    if (!pendingDeleteId) return;
+    setRules((prev) => prev.filter((rule) => rule.id !== pendingDeleteId));
     toastManager.add({
       type: "error",
       title: "Rule Deleted",
       description: "Compliance rule has been removed",
     });
+    setPendingDeleteId(null);
   };
 
   const handleSaveChanges = () => {
@@ -110,12 +126,35 @@ const ComplianceRulesTab: React.FC = () => {
 
       {/*========== Modal ==========*/}
       <div>
-          <AddRuleModal
-            isOpen={isAddModalOpen}
-            onClose={() => setIsAddModalOpen(false)}
-            onAdd={handleAddRule}
-          />
+        <AddRuleModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onAdd={handleAddRule}
+        />
       </div>
+
+      <Dialog
+        open={!!pendingDeleteId}
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete rule?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The selected compliance rule will be
+              removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setPendingDeleteId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteRule}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
