@@ -1,40 +1,46 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL = "http://31.97.145.112";
+type RouteContext = { params: Promise<{ path: string[] }> };
+
+async function resolvePath(context: RouteContext) {
+  const { path } = await context.params;
+  return path;
+}
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } },
+  context: RouteContext,
 ) {
-  return proxyRequest(request, params.path);
+  return proxyRequest(request, await resolvePath(context));
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string[] } },
+  context: RouteContext,
 ) {
-  return proxyRequest(request, params.path);
+  return proxyRequest(request, await resolvePath(context));
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { path: string[] } },
+  context: RouteContext,
 ) {
-  return proxyRequest(request, params.path);
+  return proxyRequest(request, await resolvePath(context));
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { path: string[] } },
+  context: RouteContext,
 ) {
-  return proxyRequest(request, params.path);
+  return proxyRequest(request, await resolvePath(context));
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } },
+  context: RouteContext,
 ) {
-  return proxyRequest(request, params.path);
+  return proxyRequest(request, await resolvePath(context));
 }
 
 async function proxyRequest(request: NextRequest, pathSegments: string[]) {
