@@ -3,7 +3,7 @@ export interface AdminAccount {
   id: string;
   full_name: string;
   email: string;
-  role: "Super Admin" | "Reviewer" | "Admin";
+  role: "SUPERADMIN" | "REVIEWER";
   status?: "active" | "inactive";
   is_active?: boolean;
   is_suspended?: boolean;

@@ -20,7 +20,7 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    role: "Admin" as AdminAccount["role"],
+    role: "REVIEWER" as AdminAccount["role"],
     status: "active" as AdminAccount["status"],
   });
 
@@ -118,7 +118,6 @@ const EditAdminModal: React.FC<EditAdminModalProps> = ({
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              
               <option value="REVIEWER">Reviewer</option>
               <option value="SUPERADMIN">Super Admin</option>
             </select>

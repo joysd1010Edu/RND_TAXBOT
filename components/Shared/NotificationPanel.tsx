@@ -8,6 +8,15 @@ import type {
 } from "@/Type/Shared/Shared";
 import { useAxios } from "@/Hooks/useAxiosInstance";
 import { toastManager } from "@/components/ui/toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 //========== Notification Panel Component ==========
 const NotificationPanel: React.FC<NotificationPanelProps> = ({
@@ -20,6 +29,8 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
   const [shouldRender, setShouldRender] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   //========== Fetch Notifications ==========
   const fetchNotifications = useCallback(async () => {
@@ -76,16 +87,25 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
   };
 
   //========== Delete Notification (DELETE) ==========
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
     try {
-      await axios.delete(`users/notifications/${id}/`);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setIsDeleting(true);
+      await axios.delete(`users/notifications/${pendingDeleteId}/`);
+      setNotifications((prev) => prev.filter((n) => n.id !== pendingDeleteId));
     } catch {
       toastManager.add({
         type: "error",
         title: "Error",
         description: "Failed to delete notification.",
       });
+    } finally {
+      setIsDeleting(false);
+      setPendingDeleteId(null);
     }
   };
 
@@ -212,6 +232,37 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
           )}
         </div>
       </div>
+
+      <Dialog
+        open={!!pendingDeleteId}
+        onOpenChange={(open) => !open && setPendingDeleteId(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete notification?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The notification will be permanently
+              removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setPendingDeleteId(null)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

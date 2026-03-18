@@ -7,6 +7,15 @@ import EditAdminModal from "./EditAdminModal";
 import type { AdminAccount } from "@/Type/AdminDashboard/Settings";
 import { toastManager } from "@/components/ui/toast";
 import { useAxios } from "@/Hooks/useAxiosInstance";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 //========== Admin Accounts Tab Component ==========
 const AdminAccountsTab: React.FC = () => {
@@ -17,6 +26,8 @@ const AdminAccountsTab: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<AdminAccount | null>(
     null,
   );
+  const [pendingRemove, setPendingRemove] = useState<AdminAccount | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
   const axios = useAxios();
 
   // ============= fetch admin accounts from API (placeholder) =============
@@ -105,28 +116,39 @@ const AdminAccountsTab: React.FC = () => {
     }
   };
 
-  const handleRemove = async (account: AdminAccount) => {
+  const handleRemove = (account: AdminAccount) => {
+    setPendingRemove(account);
+  };
+
+  const confirmRemove = async () => {
+    if (!pendingRemove) return;
     try {
-      
-      const response = await axios.delete(`/users/admin/${account.id}/`);
-      if (response.status === 204||response.status === 200) {
+      setIsRemoving(true);
+      const response = await axios.delete(`/users/admin/${pendingRemove.id}/`);
+      if (response.status === 204 || response.status === 200) {
         fetchAccounts();
         toastManager.add({
           type: "success",
           title: "Admin Removed",
-          description: `${account.full_name} has been removed successfully`,
+          description: `${pendingRemove.full_name} has been removed successfully`,
+        });
+      } else {
+        toastManager.add({
+          type: "error",
+          title: "Failed to Remove Admin",
+          description: `There was an error removing ${pendingRemove.full_name}'s account`,
         });
       }
     } catch (error) {
       toastManager.add({
         type: "error",
         title: "Failed to Remove Admin",
-        description: `There was an error removing ${account.full_name}'s account`,
+        description: `There was an error removing ${pendingRemove.full_name}'s account`,
       });
+    } finally {
+      setIsRemoving(false);
+      setPendingRemove(null);
     }
-    
-    
-    
   };
 
   return (
@@ -195,6 +217,38 @@ const AdminAccountsTab: React.FC = () => {
           account={selectedAccount}
         />
       </div>
+
+      <Dialog
+        open={!!pendingRemove}
+        onOpenChange={(open) => !open && setPendingRemove(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove admin?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone.{" "}
+              {pendingRemove?.full_name || "This admin"} will lose access
+              immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setPendingRemove(null)}
+              disabled={isRemoving}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmRemove}
+              disabled={isRemoving}
+            >
+              {isRemoving ? "Removing..." : "Remove"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

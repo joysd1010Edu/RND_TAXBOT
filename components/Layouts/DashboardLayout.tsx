@@ -40,9 +40,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   //========== Determine User Role ===========
   const normalizedRole = user?.role?.toLowerCase();
-  const userRole: "admin" | "superadmin" | "user" =
-    normalizedRole === "admin"
-      ? "admin"
+  const userRole: "reviewer" | "superadmin" | "user" =
+    normalizedRole === "reviewer"
+      ? "reviewer"
       : normalizedRole === "superadmin"
         ? "superadmin"
         : "user";

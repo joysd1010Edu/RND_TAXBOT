@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
   }
 
   //========== Prevent Users with Role 'user' from Accessing Admin Pages ===========
-  const allowedRoles = ["admin", "superadmin"];
+  const allowedRoles = ["reviewer", "superadmin"];
   if (
     pathname.startsWith("/Admin") &&
     (!userRole || !allowedRoles.includes(userRole))
@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
 
   //========== Redirect Authenticated Users Away from Public Routes ===========
   if (isPublicRoute && accessToken) {
-    if (userRole === "admin" || userRole === "superadmin") {
+    if (userRole === "reviewer" || userRole === "superadmin") {
       return NextResponse.redirect(new URL("/Admin/Dashboard", request.url));
     } else {
       return NextResponse.redirect(new URL("/user/UserDashboard", request.url));
@@ -56,7 +56,7 @@ export function middleware(request: NextRequest) {
 
   //========== Redirect Root to Appropriate Dashboard ===========
   if (pathname === "/" && accessToken) {
-    if (userRole === "admin" || userRole === "superadmin") {
+    if (userRole === "reviewer" || userRole === "superadmin") {
       return NextResponse.redirect(new URL("/Admin/Dashboard", request.url));
     } else {
       return NextResponse.redirect(new URL("/user/UserDashboard", request.url));
@@ -74,7 +74,6 @@ export function middleware(request: NextRequest) {
 //========== Middleware Matcher Configuration ===========
 export const config = {
   matcher: [
-   
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.svg|.*\\.png|.*\\.jpg).*)",
   ],
 };

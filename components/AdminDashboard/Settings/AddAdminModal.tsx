@@ -19,7 +19,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
-    role: "Admin" as AdminAccount["role"],
+    role: "REVIEWER" as AdminAccount["role"],
     password: "",
     confirm_password: "",
     status: "active" as const,
@@ -34,7 +34,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({
     setFormData({
       full_name: "",
       email: "",
-      role: "Admin" as AdminAccount["role"],
+      role: "REVIEWER" as AdminAccount["role"],
       password: "",
       confirm_password: "",
       status: "active" as const,
@@ -115,7 +115,7 @@ const AddAdminModal: React.FC<AddAdminModalProps> = ({
               }
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="REVIEWER">Admin</option>
+              <option value="REVIEWER">Reviewer</option>
               <option value="SUPERADMIN">Super Admin</option>
             </select>
           </div>

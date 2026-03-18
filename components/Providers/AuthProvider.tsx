@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       //========== Redirect Based on Role ===========
       if (
-        signedUserData.role?.toLowerCase() === "admin" ||
+        signedUserData.role?.toLowerCase() === "reviewer" ||
         signedUserData.role?.toLowerCase() === "superadmin"
       ) {
         router.push("/Admin/Dashboard");

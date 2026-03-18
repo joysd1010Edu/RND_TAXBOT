@@ -223,7 +223,7 @@ export default function UserDetailPage({ userId }: { userId: string }) {
       {/*========== Content Grid ==========*/}
       <div className="grid grid-cols-1  gap-6">
         {/*========== Assigned Projects ==========*/}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-2 mb-6">
             <HiOutlineFolder size={24} className="text-blue-600" />
             <h3 className="text-lg font-semibold text-gray-900">
@@ -235,7 +235,7 @@ export default function UserDetailPage({ userId }: { userId: string }) {
               <ProjectCard key={project.id} project={project} />
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/*========== Recent Activity ==========*/}
         {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

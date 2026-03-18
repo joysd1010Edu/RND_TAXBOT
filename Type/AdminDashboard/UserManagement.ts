@@ -15,6 +15,7 @@ export interface User {
   fiscal_year_end: string | null;
   role: string;
   is_active: boolean;
+  is_pending: boolean;
   is_staff: boolean;
   is_superuser: boolean;
   is_suspended: boolean;
