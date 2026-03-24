@@ -46,6 +46,13 @@ const Chat = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    console.log("[Chat] Socket status changed", {
+      connected: isSocketConnected,
+      url: wsRef.current?.url,
+    });
+  }, [isSocketConnected]);
+
   const addAIMessage = (content: string) => {
     const aiResponse: Message = {
       id: (Date.now() + 1).toString(),
@@ -132,21 +139,65 @@ const Chat = () => {
       return;
     }
 
-    const apiBaseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL || "http://31.97.145.112/api/";
-    const normalizedBaseUrl = apiBaseUrl.replace(/\/api\/?$/, "");
-    const wsBaseUrl = normalizedBaseUrl
-      .replace(/^https:\/\//, "wss://")
-      .replace(/^http:\/\//, "ws://")
+    const resolveBase = () => {
+      const clean = (value?: string | null) => {
+        if (!value) return null;
+        try {
+          const asHttp = value.startsWith("ws")
+            ? value.replace(/^wss?:\/\//, "http://")
+            : value;
+          const parsed = new URL(asHttp);
+          if (
+            parsed.hostname === "localhost" ||
+            parsed.hostname === "127.0.0.1"
+          ) {
+            return null; // skip localhost to avoid HMR/proxy
+          }
+          return parsed.origin;
+        } catch {
+          return null;
+        }
+      };
+
+      return (
+        clean(process.env.NEXT_PUBLIC_WS_BASE_URL) ||
+        clean(process.env.NEXT_PUBLIC_API_BASE_URL) ||
+        "http://31.97.145.112" ||
+        (typeof window !== "undefined"
+          ? window.location.origin
+          : "http://localhost:3000")
+      );
+    };
+
+    const httpLikeBase = resolveBase();
+
+    const normalizedBaseUrl = httpLikeBase
+      .replace(/\/_?api\/?$/, "")
       .replace(/\/$/, "");
-    const wsUrl = `${wsBaseUrl}/ws/chat/${userId}/?token=${encodeURIComponent(token)}`;
+
+    const wsBaseUrl = normalizedBaseUrl.startsWith("ws")
+      ? normalizedBaseUrl
+      : normalizedBaseUrl.startsWith("https://")
+        ? normalizedBaseUrl.replace(/^https:\/\//, "wss://")
+        : normalizedBaseUrl.replace(/^http:\/\//, "ws://");
+
+    const wsUrl = `${wsBaseUrl}/ws/chat/${userId}/?token=${token}`;
+
+    console.log("[Chat] WS base resolution", {
+      envWs: process.env.NEXT_PUBLIC_WS_BASE_URL,
+      envApi: process.env.NEXT_PUBLIC_API_BASE_URL,
+      httpLikeBase,
+      normalizedBaseUrl,
+      wsBaseUrl,
+      wsUrl,
+    });
 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
       setIsSocketConnected(true);
-      console.log("Chat websocket connected");
+      console.log("[Chat] Websocket connected", { wsUrl });
     };
 
     ws.onmessage = (event) => {
@@ -173,13 +224,13 @@ const Chat = () => {
 
     ws.onerror = (error) => {
       setIsTyping(false);
-      console.error("Chat websocket error", error);
+      console.error("[Chat] Websocket error", { wsUrl, error });
     };
 
     ws.onclose = () => {
       setIsSocketConnected(false);
       setIsTyping(false);
-      console.log("Chat websocket disconnected");
+      console.log("[Chat] Websocket disconnected", { wsUrl });
     };
 
     return () => {
