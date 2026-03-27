@@ -153,43 +153,11 @@ const CreateProjectContent = () => {
                   Incentive plan
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={async () => {
-                  const isValid = await trigger();
-                  if (!isValid) return scrollToFirstError();
-                  await onSaveDraft(methods.getValues());
-                }}
-              >
-                Save draft
-              </Button>
+              
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-base text-gray-700 overflow-x-auto pb-3">
-            {sectionOrder.map((section, idx) => (
-              <React.Fragment key={section.id}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    document
-                      .getElementById(section.id)
-                      ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                  }
-                  className="flex items-center gap-2 transition-all duration-200 hover:text-indigo-700"
-                >
-                  <div className="w-8 h-8 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 flex items-center justify-center text-sm font-semibold shadow-sm">
-                    {idx + 1}
-                  </div>
-                  <span className="whitespace-nowrap">{section.label}</span>
-                </button>
-                {idx < sectionOrder.length - 1 && (
-                  <div className="flex-1 h-px bg-gray-200" />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
+          
 
           <div id="upload" className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <button
