@@ -71,6 +71,20 @@ const initialFormData: ProjectFormData = {
   technicalDocuments: [],
   financialDocuments: [],
   otherDocuments: [],
+  companyName: "",
+  abn: "",
+  contactPerson: "",
+  contactEmail: "",
+  budgetedSpend: "",
+  reportTitle: "RDTI Compliance Review Report",
+  includeRecommendations: true,
+  flagIncompleteSections: true,
+  flagNoFyClaim: true,
+  enableYoYComparison: false,
+  yoyDocument: null,
+  planDocument: null,
+  additionalNotes: "",
+  activities: [{ name: "", type: "Core", effort: "", status: "Active" }],
 };
 
 interface CreateProjectProviderProps {

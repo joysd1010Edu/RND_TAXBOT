@@ -7,6 +7,13 @@ export interface QuarterlyActivities {
   newKnowledge: string;
 }
 
+export interface ActivityRow {
+  name: string;
+  type: string;
+  effort: string;
+  status: string;
+}
+
 export interface ProjectFormData {
   // Section 1: Project Details
   projectTitle: string;
@@ -41,6 +48,22 @@ export interface ProjectFormData {
   technicalDocuments: File[];
   financialDocuments: File[];
   otherDocuments: File[];
+
+  // New single-page fields
+  companyName?: string;
+  abn?: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  budgetedSpend?: string;
+  reportTitle?: string;
+  includeRecommendations?: boolean;
+  flagIncompleteSections?: boolean;
+  flagNoFyClaim?: boolean;
+  enableYoYComparison?: boolean;
+  yoyDocument?: File | null;
+  planDocument?: File | null;
+  additionalNotes?: string;
+  activities?: ActivityRow[];
 
   // Additional metadata
   id?: string;
