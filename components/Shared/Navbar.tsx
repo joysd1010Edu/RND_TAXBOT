@@ -83,6 +83,11 @@ const Navbar: React.FC<NavbarProps> = ({
       href: "/Admin/settings",
       icon: <MdSettings size={20} />,
     },
+    {
+      label: "Support",
+      href: "/Admin/Support",
+      icon: <MdMessage size={20} />,
+    },
   ];
 
   const userNavItems: NavItem[] = [
@@ -107,6 +112,11 @@ const Navbar: React.FC<NavbarProps> = ({
       href: "/user/Law",
       icon: <GoLaw size={20} />,
     },
+    {
+      label: "Support",
+      href: "/user/Support",
+      icon: <MdMessage size={20} />,
+    },
   ];
 
   const navItems =
@@ -130,7 +140,6 @@ const Navbar: React.FC<NavbarProps> = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   const handleLogout = () => {
     logout();
     setIsDropdownOpen(false);
