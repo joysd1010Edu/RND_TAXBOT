@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   HiOutlineBuildingOffice2,
@@ -16,37 +16,132 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toastManager } from "@/components/ui/toast";
 import { OrganizationForm } from "@/Type/UserDashboard/Settings";
+import { useAxios } from "@/Hooks/useAxiosInstance";
 
 
 //========== Organization Details Component ==========
 const OrganizationDetails: React.FC = () => {
+  const axios = useAxios();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [organizationId, setOrganizationId] = useState<number | null>(null);
 
   const form = useForm<OrganizationForm>({
     defaultValues: {
-      organizationName: "Tech Corp Australia",
-      abn: "12 345 678 901",
+      organizationName: "",
+      abn: "",
       industry: "",
       companySize: "",
-      streetAddress: "123 Innovation Street",
-      city: "Sydney",
+      streetAddress: "",
+      city: "",
       state: "",
-      postcode: "2000",
-      organizationPhone: "+61 2 9XXX XXXX",
-      website: "www.techcorp.com.au",
+      postcode: "",
+      organizationPhone: "",
+      website: "",
       fiscalYearEnd: "",
     },
   });
 
+  const mapOrganizationToForm = (organization: Record<string, any>): OrganizationForm => ({
+    organizationName: organization.organization_name || "",
+    abn: organization.abn || "",
+    industry: organization.industry || "",
+    companySize:
+      organization.company_size !== undefined && organization.company_size !== null
+        ? String(organization.company_size)
+        : "",
+    streetAddress: organization.street_address || "",
+    city: organization.city || "",
+    state: organization.state || "",
+    postcode: organization.post_code || "",
+    organizationPhone: organization.phone || "",
+    website: organization.website || "",
+    fiscalYearEnd: organization.fiscal_year_end
+      ? String(organization.fiscal_year_end).split("T")[0]
+      : "",
+  });
+
+  const fetchOrganization = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get("/organization/");
+      const payload = response.data?.data || response.data;
+      const firstOrganization = Array.isArray(payload)
+        ? payload[0]
+        : Array.isArray(payload?.results)
+          ? payload.results[0]
+          : payload;
+
+      if (firstOrganization) {
+        setOrganizationId(firstOrganization.id ?? null);
+        form.reset(mapOrganizationToForm(firstOrganization));
+      }
+    } catch (error) {
+      console.error("Failed to load organization details", error);
+      toastManager.add({
+        title: "Error",
+        description: "Could not load organization details.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrganization();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   //========== Handle Save ==========
-  const handleSave = (data: OrganizationForm) => {
-    console.log("Organization Details:", data);
-    setIsEditing(false);
-    toastManager.add({
-      title: "Success",
-      description: "Organization details updated successfully.",
-      type: "success",
-    });
+  const handleSave = async (data: OrganizationForm) => {
+    try {
+      setIsSaving(true);
+
+      const parsedCompanySize = Number(data.companySize);
+      const payload = {
+        organization_name: data.organizationName,
+        abn: data.abn,
+        industry: data.industry,
+        company_size: Number.isFinite(parsedCompanySize) ? parsedCompanySize : 0,
+        street_address: data.streetAddress,
+        city: data.city,
+        state: data.state,
+        post_code: data.postcode,
+        phone: data.organizationPhone,
+        website: data.website,
+        fiscal_year_end: data.fiscalYearEnd,
+      };
+
+      let response;
+      if (organizationId) {
+        response = await axios.put(`/organization/${organizationId}/`, payload);
+      } else {
+        response = await axios.post("/organization/", payload);
+      }
+
+      const savedOrganization = response.data?.data || response.data;
+      if (savedOrganization?.id) {
+        setOrganizationId(savedOrganization.id);
+      }
+
+      setIsEditing(false);
+      toastManager.add({
+        title: "Success",
+        description: "Organization details updated successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to save organization details", error);
+      toastManager.add({
+        title: "Error",
+        description: "Failed to update organization details.",
+        type: "error",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -65,6 +160,7 @@ const OrganizationDetails: React.FC = () => {
           <Button
             onClick={() => setIsEditing(true)}
             variant="outline"
+            disabled={isLoading}
             className="flex items-center gap-2"
           >
             <HiOutlinePencil className="w-4 h-4" />
@@ -73,10 +169,11 @@ const OrganizationDetails: React.FC = () => {
         ) : (
           <Button
             onClick={form.handleSubmit(handleSave)}
+            disabled={isSaving}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
           >
             <HiOutlineCheck className="w-4 h-4" />
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </Button>
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   HiOutlineUser,
@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toastManager } from "@/components/ui/toast";
+import { useAxios } from "@/Hooks/useAxiosInstance";
 
 //========== Type Definitions ==========
 interface PersonalInfoForm {
@@ -26,28 +27,106 @@ interface PersonalInfoForm {
 
 //========== Personal Information Component ==========
 const PersonalInformation: React.FC = () => {
+  const axios = useAxios();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<PersonalInfoForm>({
     defaultValues: {
-      fullName: "John Smith",
-      email: "john@techcorp.com",
-      phone: "+61 4XX XXX XXX",
-      position: "R&D Manager",
-      department: "Research & Development",
+      fullName: "",
+      email: "",
+      phone: "",
+      position: "",
+      department: "",
       bio: "",
     },
   });
 
-  //========== Handle Save ==========
-  const handleSave = (data: PersonalInfoForm) => {
-    console.log("Personal Information:", data);
-    setIsEditing(false);
-    toastManager.add({
-      title: "Success",
-      description: "Personal information updated successfully.",
-      type: "success",
+  const mapProfileToForm = (profile: Record<string, any>): PersonalInfoForm => ({
+    fullName: profile.full_name || profile.name || "",
+    email: profile.email || "",
+    phone: profile.phone || "",
+    position: profile.position || "",
+    department: profile.department || "",
+    bio: profile.bio || "",
+  });
+
+  const syncStoredUser = (fullName: string, email: string) => {
+    [localStorage, sessionStorage].forEach((storage) => {
+      const rawUser = storage.getItem("user");
+      if (!rawUser) return;
+
+      try {
+        const user = JSON.parse(rawUser);
+        const updatedUser = {
+          ...user,
+          full_name: fullName,
+          email,
+        };
+        storage.setItem("user", JSON.stringify(updatedUser));
+      } catch (error) {
+        console.error("Unable to sync profile data in storage", error);
+      }
     });
+  };
+
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get("/users/profile/");
+      const profile = response.data?.data || response.data;
+      if (profile) {
+        form.reset(mapProfileToForm(profile));
+      }
+    } catch (error) {
+      console.error("Failed to load profile", error);
+      toastManager.add({
+        title: "Error",
+        description: "Could not load profile information.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  //========== Handle Save ==========
+  const handleSave = async (data: PersonalInfoForm) => {
+    try {
+      setIsSaving(true);
+      const payload = {
+        full_name: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        position: data.position,
+        department: data.department,
+        bio: data.bio,
+      };
+
+      await axios.put("/users/profile/", payload);
+      syncStoredUser(data.fullName, data.email);
+      setIsEditing(false);
+      toastManager.add({
+        title: "Success",
+        description: "Personal information updated successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to update profile", error);
+      toastManager.add({
+        title: "Error",
+        description: "Failed to update personal information.",
+        type: "error",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -67,6 +146,7 @@ const PersonalInformation: React.FC = () => {
           <Button
             onClick={() => setIsEditing(true)}
             variant="outline"
+            disabled={isLoading}
             className="flex items-center gap-2"
           >
             <HiOutlinePencil className="w-4 h-4" />
@@ -75,10 +155,11 @@ const PersonalInformation: React.FC = () => {
         ) : (
           <Button
             onClick={form.handleSubmit(handleSave)}
+            disabled={isSaving}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
           >
             <HiOutlineCheck className="w-4 h-4" />
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </Button>
         )}
       </div>

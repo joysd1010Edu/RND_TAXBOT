@@ -3,7 +3,6 @@
 import PersonalInformation from "./PersonalInformation";
 import OrganizationDetails from "./OrganizationDetails";
 import SecuritySettings from "./SecuritySettings";
-import NotificationPreferences from "./NotificationPreferences";
 
 //========== Settings Page ==========
 const Settings = () => {
@@ -17,9 +16,6 @@ const Settings = () => {
 
       {/*========== Security Section ==========*/}
       <SecuritySettings />
-
-      {/*========== Notification Preferences Section ==========*/}
-      <NotificationPreferences />
     </div>
   );
 };

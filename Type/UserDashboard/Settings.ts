@@ -1,4 +1,5 @@
 export interface SecurityForm {
+  currentPassword: string;
   newPassword: string;
   confirmPassword: string;
 }
