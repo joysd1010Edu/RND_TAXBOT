@@ -18,7 +18,6 @@ import { toastManager } from "@/components/ui/toast";
 import { OrganizationForm } from "@/Type/UserDashboard/Settings";
 import { useAxios } from "@/Hooks/useAxiosInstance";
 
-
 //========== Organization Details Component ==========
 const OrganizationDetails: React.FC = () => {
   const axios = useAxios();
@@ -43,12 +42,15 @@ const OrganizationDetails: React.FC = () => {
     },
   });
 
-  const mapOrganizationToForm = (organization: Record<string, any>): OrganizationForm => ({
+  const mapOrganizationToForm = (
+    organization: Record<string, any>,
+  ): OrganizationForm => ({
     organizationName: organization.organization_name || "",
     abn: organization.abn || "",
     industry: organization.industry || "",
     companySize:
-      organization.company_size !== undefined && organization.company_size !== null
+      organization.company_size !== undefined &&
+      organization.company_size !== null
         ? String(organization.company_size)
         : "",
     streetAddress: organization.street_address || "",
@@ -104,7 +106,9 @@ const OrganizationDetails: React.FC = () => {
         organization_name: data.organizationName,
         abn: data.abn,
         industry: data.industry,
-        company_size: Number.isFinite(parsedCompanySize) ? parsedCompanySize : 0,
+        company_size: Number.isFinite(parsedCompanySize)
+          ? parsedCompanySize
+          : 0,
         street_address: data.streetAddress,
         city: data.city,
         state: data.state,

@@ -136,7 +136,9 @@ const SecuritySettings: React.FC = () => {
                 onClick={() => setShowCurrentPassword((prev) => !prev)}
                 disabled={!isEditing}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                aria-label={
+                  showCurrentPassword ? "Hide password" : "Show password"
+                }
               >
                 {showCurrentPassword ? (
                   <HiOutlineEyeSlash className="w-5 h-5" />
@@ -190,7 +192,9 @@ const SecuritySettings: React.FC = () => {
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
                 disabled={!isEditing}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
               >
                 {showConfirmPassword ? (
                   <HiOutlineEyeSlash className="w-5 h-5" />

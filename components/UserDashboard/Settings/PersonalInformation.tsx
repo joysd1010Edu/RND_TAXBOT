@@ -43,7 +43,9 @@ const PersonalInformation: React.FC = () => {
     },
   });
 
-  const mapProfileToForm = (profile: Record<string, any>): PersonalInfoForm => ({
+  const mapProfileToForm = (
+    profile: Record<string, any>,
+  ): PersonalInfoForm => ({
     fullName: profile.full_name || profile.name || "",
     email: profile.email || "",
     phone: profile.phone || "",
