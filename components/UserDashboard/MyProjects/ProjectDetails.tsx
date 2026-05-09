@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import {
   HiOutlineArrowLeft,
   HiOutlineBuildingOffice2,
@@ -38,10 +39,27 @@ type ProjectResponse = {
   start_date?: string;
   finish_date?: string;
   input_method?: string;
+  report?: ReportData | null;
   [key: string]: unknown;
 };
 
 type FormValues = Record<string, string>;
+
+type ReportData = {
+  id: number;
+  report_text: string;
+  report_pdf: string;
+  score: number;
+  score_grade: string;
+  score_technical_uncertainty: number;
+  score_systematic_progression: number;
+  score_new_knowledge: number;
+  score_evidence_documentation: number;
+  red_flags: string[];
+  strengths: string[];
+  recommendations: string[];
+  generated_at: string;
+};
 
 type ChatMessage = {
   id?: number | string;
@@ -207,6 +225,21 @@ const getInterviewCompleteFromChat = (messages: ChatMessage[]): boolean => {
   );
 };
 
+const ScoreBar = ({ label, value }: { label: string; value: number }) => (
+  <div>
+    <div className="mb-1 flex justify-between text-sm">
+      <span className="text-gray-600">{label}</span>
+      <span className="font-medium text-gray-800">{value}/25</span>
+    </div>
+    <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+      <div
+        className="h-full rounded-full bg-indigo-500 transition-all"
+        style={{ width: `${(value / 25) * 100}%` }}
+      />
+    </div>
+  </div>
+);
+
 const ProjectDetails = ({ projectId }: { projectId: string }) => {
   const [navigatorKey, setNavigatorKey] = useState(false);
   const axios = useAxios();
@@ -220,6 +253,8 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
   const [isComplete, setIsComplete] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [showFullReport, setShowFullReport] = useState(false);
 
   const { register, handleSubmit, reset, watch } = useForm<FormValues>({
     defaultValues: emptyFormValues(),
@@ -227,6 +262,21 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
 
   const status = (project?.status ?? "DRAFT").toUpperCase();
   const canEdit = status === "DRAFT" || status === "REJECTED";
+  const isApproved = status === "APPROVED";
+
+  useEffect(() => {
+    setShowFullReport(false);
+  }, [reportData?.id]);
+
+  const getReportPreview = (text: string) => {
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    const previewWords = words.slice(0, 100);
+    const previewText = previewWords.join(" ");
+    return {
+      previewText,
+      hasMore: words.length > previewWords.length,
+    };
+  };
 
   const fetchProject = useCallback(async () => {
     setIsLoading(true);
@@ -247,7 +297,6 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
         rawProject.unknown_in_advance !== null &&
         rawProject.evaluation !== null
       ) {
-       
         setNavigatorKey(true);
       }
       if (!rawProject || typeof rawProject !== "object") {
@@ -255,6 +304,7 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
       }
 
       setProject(rawProject);
+      setReportData((rawProject.report as ReportData | null) ?? null);
       const serverValues = mapProjectToForm(rawProject);
       const cachedDraft = readCachedDraft(projectId);
       const nextValues = cachedDraft
@@ -604,7 +654,7 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
             </div>
 
             <div>
-              {navigatorKey ? (
+              {!isApproved && navigatorKey ? (
                 <button
                   onClick={() =>
                     router.push(`/user/MyProjects/${projectId}/interview`)
@@ -613,7 +663,7 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
                 >
                   navigate to AI interview
                 </button>
-              ) : (
+              ) : !isApproved ? (
                 <div className="rounded-xl border border-blue-100 bg-red-500/80  px-4 py-3 text-sm text-white lg:max-w-md">
                   <div className="flex items-start gap-3">
                     <HiOutlineInformationCircle
@@ -626,10 +676,140 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
                     </p>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
+
+        {isApproved && reportData && (
+          <section className="border-b border-gray-200 bg-white p-6 md:p-8">
+            <div className="space-y-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    Project Report
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Generated:{" "}
+                    {new Date(reportData.generated_at).toLocaleString()}
+                  </p>
+                </div>
+                <a
+                  href={`${reportData.report_pdf.startsWith("http") ? "" : "http://31.97.145.112"}${reportData.report_pdf}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                >
+                  <HiOutlineArrowDownTray size={16} />
+                  Download PDF
+                </a>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-center">
+                  <p className="text-sm font-medium text-gray-500">Score</p>
+                  <p className="mt-2 text-5xl font-bold text-gray-900">
+                    {reportData.score}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold uppercase tracking-wide text-gray-600">
+                    {reportData.score_grade}
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <ScoreBar
+                    label="Technical Uncertainty"
+                    value={reportData.score_technical_uncertainty}
+                  />
+                  <ScoreBar
+                    label="Systematic Progression"
+                    value={reportData.score_systematic_progression}
+                  />
+                  <ScoreBar
+                    label="New Knowledge"
+                    value={reportData.score_new_knowledge}
+                  />
+                  <ScoreBar
+                    label="Evidence & Documentation"
+                    value={reportData.score_evidence_documentation}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <h3 className="text-sm font-semibold text-emerald-800">
+                    Strengths
+                  </h3>
+                  <ul className="mt-3 space-y-2 text-sm text-emerald-700">
+                    {reportData.strengths.map((item, index) => (
+                      <li key={`${item}-${index}`}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+                  <h3 className="text-sm font-semibold text-rose-800">
+                    Red Flags
+                  </h3>
+                  <ul className="mt-3 space-y-2 text-sm text-rose-700">
+                    {reportData.red_flags.map((item, index) => (
+                      <li key={`${item}-${index}`}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+                  <h3 className="text-sm font-semibold text-blue-800">
+                    Recommendations
+                  </h3>
+                  <ul className="mt-3 space-y-2 text-sm text-blue-700">
+                    {reportData.recommendations.map((item, index) => (
+                      <li key={`${item}-${index}`}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <h3 className="text-sm font-semibold text-gray-800">
+                  Report Details
+                </h3>
+                {(() => {
+                  const { previewText, hasMore } = getReportPreview(
+                    reportData.report_text,
+                  );
+                  const displayedText = showFullReport
+                    ? reportData.report_text
+                    : previewText;
+
+                  return (
+                    <>
+                      <div
+                        className={`prose prose-sm mt-3 max-w-none overflow-hidden text-gray-700 transition-all duration-500 ease-in-out ${
+                          showFullReport
+                            ? "max-h-1250 opacity-100"
+                            : "max-h-64 opacity-95"
+                        }`}
+                      >
+                        <ReactMarkdown>{displayedText}</ReactMarkdown>
+                      </div>
+                      {hasMore && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowFullReport((previous) => !previous)
+                          }
+                          className="mt-3 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
+                        >
+                          {showFullReport ? "Show less" : "See more"}
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </section>
+        )}
 
         <form
           onSubmit={handleSubmit(handleSave)}
@@ -801,8 +981,8 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
             </section>
           )}
 
-          {/* PDF Preview & Download - Show once interview is complete */}
-          {isComplete && (
+          {/* PDF Preview & Download - Hide for approved projects */}
+          {isComplete && !isApproved && (
             <section className="space-y-4">
               <h2 className="text-2xl font-semibold text-gray-900">
                 Project PDF
@@ -862,7 +1042,6 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
               </DialogPanel>
               <DialogFooter>
                 <div className="flex gap-2">
-                 
                   <Button
                     type="button"
                     onClick={handleDownloadPDF}
@@ -886,22 +1065,25 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
             </DialogContent>
           </Dialog>
 
-          {/* Submit Project Button - Hide after successful submission */}
-          {isComplete && !isSubmitted && status !== "PENDING" && (
-            <section className="space-y-4">
-              <Button
-                type="button"
-                onClick={handleSubmitProject}
-                disabled={isSubmitting}
-                className="h-11 bg-purple-600 px-6 text-base text-white hover:bg-purple-700"
-              >
-                {isSubmitting ? "Submitting..." : "Submit Project for Review"}
-              </Button>
-            </section>
-          )}
+          {/* Submit Project Button - Hide after successful submission or approval */}
+          {isComplete &&
+            !isSubmitted &&
+            status !== "PENDING" &&
+            !isApproved && (
+              <section className="space-y-4">
+                <Button
+                  type="button"
+                  onClick={handleSubmitProject}
+                  disabled={isSubmitting}
+                  className="h-11 bg-purple-600 px-6 text-base text-white hover:bg-purple-700"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Project for Review"}
+                </Button>
+              </section>
+            )}
 
-          {/* Go to Chat Button - Show once interview is complete */}
-          {isComplete && (
+          {/* Go to Chat Button - Show once interview is complete, except approved */}
+          {isComplete && !isApproved && (
             <section className="space-y-4">
               <Button
                 type="button"

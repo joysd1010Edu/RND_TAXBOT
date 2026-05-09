@@ -3,7 +3,6 @@ import React from "react";
 import {
   HiOutlineEye,
   HiOutlineEnvelope,
-  HiOutlineArrowDownTray,
 } from "react-icons/hi2";
 import type { ProjectTableRowProps } from "@/Type/AdminDashboard/ProjectManagement";
 
@@ -21,39 +20,22 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
   project,
   onView,
   onEmail,
-  
 }) => {
   const badge = statusStyles[project.status] ?? "bg-gray-100 text-gray-700";
 
   return (
     <tr className="border-b border-gray-100 hover:bg-gray-50">
-      {/*========== Project Title ==========*/}
-      <td className="p-4">
-        <p className="text-sm font-medium text-gray-900">
-          {project.project_title}
-        </p>
-      </td>
-
       {/*========== Industry ==========*/}
+      <td className="p-4">
+        <p className="text-sm text-gray-700">{String(project.title)}</p>
+      </td>
       <td className="p-4">
         <p className="text-sm text-gray-700">{project.industry}</p>
       </td>
 
       {/*========== Financial Year ==========*/}
       <td className="p-4">
-        <p className="text-sm text-gray-700">{project.financial_year}</p>
-      </td>
-
-      {/*========== Staff ==========*/}
-      <td className="p-4">
-        <p className="text-sm text-gray-700">{project.staff_members}</p>
-      </td>
-
-      {/*========== Total R&D Expenditure ==========*/}
-      <td className="p-4">
-        <p className="text-sm font-medium text-gray-700">
-          ${Number(project.total_rnd_expenditure).toLocaleString()}
-        </p>
+        <p className="text-sm text-gray-700">{String(project.project_year)}</p>
       </td>
 
       {/*========== Status ==========*/}
@@ -63,13 +45,6 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
         >
           {project.status}
         </span>
-      </td>
-
-      {/*========== Last Updated ==========*/}
-      <td className="p-4">
-        <p className="text-sm text-gray-700 whitespace-nowrap">
-          {new Date(project.updated_at).toLocaleDateString()}
-        </p>
       </td>
 
       {/*========== Actions ==========*/}
@@ -89,7 +64,6 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
           >
             <HiOutlineEnvelope size={20} className="text-orange-600" />
           </button>
-        
         </div>
       </td>
     </tr>
