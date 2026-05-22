@@ -31,7 +31,7 @@ const OrganizationDetails: React.FC = () => {
       organizationName: "",
       abn: "",
       industry: "",
-      companySize: undefined,
+      companySize: "",
       streetAddress: "",
       city: "",
       state: "",
@@ -72,6 +72,28 @@ const OrganizationDetails: React.FC = () => {
       : "",
   });
 
+  const mapOrganizationToForm = (
+    organization: Record<string, any>,
+  ): OrganizationForm => ({
+    organizationName: organization.organization_name || "",
+    abn: organization.abn || "",
+    industry: organization.industry || "",
+    companySize:
+      organization.company_size !== undefined &&
+      organization.company_size !== null
+        ? String(organization.company_size)
+        : "",
+    streetAddress: organization.street_address || "",
+    city: organization.city || "",
+    state: organization.state || "",
+    postcode: organization.post_code || "",
+    organizationPhone: organization.phone || "",
+    website: organization.website || "",
+    fiscalYearEnd: organization.fiscal_year_end
+      ? String(organization.fiscal_year_end).split("T")[0]
+      : "",
+  });
+
   const fetchOrganization = async () => {
     try {
       setIsLoading(true);
@@ -85,7 +107,7 @@ const OrganizationDetails: React.FC = () => {
 
       if (firstOrganization) {
         setOrganizationId(firstOrganization.id ?? null);
-        reset(mapOrganizationToForm(firstOrganization));
+        form.reset(mapOrganizationToForm(firstOrganization));
       }
     } catch (error) {
       console.error("Failed to load organization details", error);
