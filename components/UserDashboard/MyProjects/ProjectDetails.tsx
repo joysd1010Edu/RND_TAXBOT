@@ -384,7 +384,7 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
 
         // Use native fetch with proper headers
         const response = await fetch(
-          `http://31.97.145.112/api/tax_project/projects/${projectId}/preview-pdf/`,
+          `https://api.rdtaxbot.com.au/api/tax_project/projects/${projectId}/preview-pdf/`,
           {
             method: "GET",
             headers: {

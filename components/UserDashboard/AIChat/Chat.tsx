@@ -146,26 +146,28 @@ const Chat = () => {
           const asHttp = value.startsWith("ws")
             ? value.replace(/^wss?:\/\//, "http://")
             : value;
-          const parsed = new URL(asHttp);
-          if (
-            parsed.hostname === "localhost" ||
-            parsed.hostname === "127.0.0.1"
-          ) {
-            return null; // skip localhost to avoid HMR/proxy
+          if (asHttp.startsWith("/")) {
+            return null;
           }
+          const parsed = new URL(asHttp);
           return parsed.origin;
         } catch {
           return null;
         }
       };
 
+      const currentOrigin =
+        typeof window !== "undefined" ? window.location.origin : null;
+      const isLocalOrigin =
+        currentOrigin?.includes("localhost") ||
+        currentOrigin?.includes("127.0.0.1");
+
       return (
         clean(process.env.NEXT_PUBLIC_WS_BASE_URL) ||
         clean(process.env.NEXT_PUBLIC_API_BASE_URL) ||
-        "http://31.97.145.112" ||
-        (typeof window !== "undefined"
-          ? window.location.origin
-          : "http://localhost:3000")
+        clean(process.env.BACKEND_URL) ||
+        (!isLocalOrigin ? currentOrigin : null) ||
+        "https://api.rdtaxbot.com.au"
       );
     };
 
@@ -191,6 +193,16 @@ const Chat = () => {
       wsBaseUrl,
       wsUrl,
     });
+
+    if (
+      !process.env.NEXT_PUBLIC_WS_BASE_URL &&
+      !process.env.NEXT_PUBLIC_API_BASE_URL &&
+      !process.env.BACKEND_URL
+    ) {
+      console.warn(
+        "[Chat] No explicit WS/HTTP backend configured (NEXT_PUBLIC_WS_BASE_URL, NEXT_PUBLIC_API_BASE_URL, or BACKEND_URL). Using production websocket host as last resort.",
+      );
+    }
 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
@@ -227,10 +239,15 @@ const Chat = () => {
       console.error("[Chat] Websocket error", { wsUrl, error });
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       setIsSocketConnected(false);
       setIsTyping(false);
-      console.log("[Chat] Websocket disconnected", { wsUrl });
+      console.log("[Chat] Websocket disconnected", {
+        wsUrl,
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+      });
     };
 
     return () => {

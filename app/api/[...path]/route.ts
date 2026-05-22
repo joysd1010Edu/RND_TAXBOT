@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 const rawBackendBaseUrl =
   process.env.BACKEND_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://31.97.145.112";
+  "https://api.rdtaxbot.com.au";
 
 const BACKEND_URL = rawBackendBaseUrl
   .replace(/\/api\/?$/, "")

@@ -55,13 +55,16 @@ const Project = () => {
             window.sessionStorage.getItem("accessToken")
           : null;
 
-      const response = await fetch("http://31.97.145.112/api/tax_project/admin/projects/", {
-        method: "GET",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          Accept: "application/json",
+      const response = await fetch(
+        "https://api.rdtaxbot.com.au/api/tax_project/admin/projects/",
+        {
+          method: "GET",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            Accept: "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -127,7 +130,7 @@ const Project = () => {
           : null;
 
       const response = await fetch(
-        `http://31.97.145.112/api/users/send-mail/${selectedProject.id}/`,
+        `https://api.rdtaxbot.com.au/api/users/send-mail/${selectedProject.id}/`,
         {
           method: "POST",
           headers: {
@@ -253,11 +256,11 @@ const Project = () => {
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
                   Project Year
                 </th>
-                
+
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
                   Status
                 </th>
-                
+
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
                   Actions
                 </th>
