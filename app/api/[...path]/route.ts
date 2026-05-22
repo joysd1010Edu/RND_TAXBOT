@@ -62,6 +62,7 @@ async function proxyRequest(request: NextRequest, pathSegments: string[]) {
     for (let index = 0; index < candidateUrls.length; index += 1) {
       const url = candidateUrls[index];
       const finalUrl = queryString ? `${url}?${queryString}` : url;
+      console.log("Proxying to:", finalUrl);
 
       const backendResponse = await fetch(finalUrl, {
         method: request.method,

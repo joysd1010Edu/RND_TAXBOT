@@ -3,7 +3,6 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import {
-  MdEdit,
   MdRemoveRedEye,
   MdRefresh,
   MdCalendarToday,
@@ -26,11 +25,6 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
     router.push(`/user/MyProjects/${project.id}`);
   };
 
-  const handleEditProject = () => {
-    // Navigate to CreateProject with project ID for editing
-    router.push(`/user/CreateProject?id=${project.id}`);
-  };
-
   const handleRenewProject = () => {
     // Navigate to CreateProject for renewal (creates a copy)
     router.push(`/user/CreateProject?renewFrom=${project.id}`);
@@ -39,14 +33,14 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
   //========== Status Badge Styling ===========
   const getStatusStyles = () => {
     switch (project.status) {
-      case "draft":
-        return "bg-yellow-100 text-yellow-700";
-      case "completed":
+      case "DRAFT":
+        return "bg-gray-100 text-gray-700";
+      case "PENDING":
+        return "bg-amber-100 text-amber-700";
+      case "APPROVED":
         return "bg-green-100 text-green-700";
-      case "pending-review":
-        return "bg-blue-100 text-blue-700";
-      case "under_review":
-        return "bg-purple-100 text-purple-700";
+      case "REJECTED":
+        return "bg-red-100 text-red-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -54,16 +48,16 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
 
   const getStatusLabel = () => {
     switch (project.status) {
-      case "draft":
-        return "Draft";
-      case "completed":
-        return "Completed";
-      case "pending-review":
-        return "Pending Review";
-      case "under_review":
-        return "Sent for Review";
+      case "DRAFT":
+        return "In Progress";
+      case "PENDING":
+        return "Under Review";
+      case "APPROVED":
+        return "Approved";
+      case "REJECTED":
+        return "Action Needed";
       default:
-        return "Unknown";
+        return project.status;
     }
   };
   return (
@@ -74,7 +68,7 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
           <FaFileAlt className="text-blue-500 text-xl" />
         </div>
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyles()}`}
+          className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyles()}`}
         >
           {getStatusLabel()}
         </span>
@@ -114,33 +108,21 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
 
       {/*========= Action Buttons =========*/}
       <div className="flex gap-2 mt-auto flex-wrap">
-        {project.canEdit ? (
+        <button
+          onClick={handleViewProject}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
+          <MdRemoveRedEye size={18} />
+          <span>View</span>
+        </button>
+        {project.canRenew && (
           <button
-            onClick={handleEditProject}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            onClick={handleRenewProject}
+            className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2"
           >
-            <MdEdit size={18} />
-            <span>Edit</span>
+            <MdRefresh size={18} />
+            <span>Renew</span>
           </button>
-        ) : (
-          <>
-            <button
-              onClick={handleViewProject}
-              className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2"
-            >
-              <MdRemoveRedEye size={18} />
-              <span>View</span>
-            </button>
-            {project.canRenew && (
-              <button
-                onClick={handleRenewProject}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <MdRefresh size={18} />
-                <span>Renew</span>
-              </button>
-            )}
-          </>
         )}
         {onDelete && (
           <button

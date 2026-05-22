@@ -40,6 +40,36 @@ const OrganizationDetails: React.FC = () => {
       website: "",
       fiscalYearEnd: "",
     },
+    mode: "onBlur",
+  });
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = form;
+
+  const mapOrganizationToForm = (
+    organization: Record<string, any>,
+  ): OrganizationForm => ({
+    organizationName: organization.organization_name || "",
+    abn: organization.abn || "",
+    industry: organization.industry || "",
+    companySize:
+      organization.company_size !== undefined &&
+      organization.company_size !== null
+        ? Number(organization.company_size)
+        : undefined,
+    streetAddress: organization.street_address || "",
+    city: organization.city || "",
+    state: organization.state || "",
+    postcode: organization.post_code || "",
+    organizationPhone: organization.phone || "",
+    website: organization.website || "",
+    fiscalYearEnd: organization.fiscal_year_end
+      ? String(organization.fiscal_year_end).split("T")[0]
+      : "",
   });
 
   const mapOrganizationToForm = (
@@ -172,7 +202,7 @@ const OrganizationDetails: React.FC = () => {
           </Button>
         ) : (
           <Button
-            onClick={form.handleSubmit(handleSave)}
+            onClick={handleSubmit(handleSave)}
             disabled={isSaving}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
           >
@@ -191,11 +221,18 @@ const OrganizationDetails: React.FC = () => {
               <HiOutlineBuildingOffice2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 id="organizationName"
-                {...form.register("organizationName")}
+                {...register("organizationName", {
+                  required: "Organization name is required",
+                })}
                 disabled={!isEditing}
-                className="pl-10"
+                className={`pl-10 ${errors.organizationName ? "border-red-500" : ""}`}
               />
             </div>
+            {errors.organizationName && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.organizationName.message}
+              </p>
+            )}
           </div>
 
           {/* ABN */}
@@ -203,10 +240,23 @@ const OrganizationDetails: React.FC = () => {
             <Label htmlFor="abn">ABN (Australian Business Number)</Label>
             <Input
               id="abn"
-              {...form.register("abn")}
+              {...register("abn", {
+                required: "ABN is required",
+                minLength: {
+                  value: 9,
+                  message: "ABN must be at least 9 characters",
+                },
+                maxLength: {
+                  value: 20,
+                  message: "ABN must be 20 characters or less",
+                },
+              })}
               disabled={!isEditing}
-              className="mt-1"
+              className={`mt-1 ${errors.abn ? "border-red-500" : ""}`}
             />
+            {errors.abn && (
+              <p className="mt-1 text-xs text-red-600">{errors.abn.message}</p>
+            )}
           </div>
 
           {/* Industry */}
@@ -214,10 +264,17 @@ const OrganizationDetails: React.FC = () => {
             <Label htmlFor="industry">Industry</Label>
             <Input
               id="industry"
-              {...form.register("industry")}
+              {...register("industry", {
+                required: "Industry is required",
+              })}
               disabled={!isEditing}
-              className="mt-1"
+              className={`mt-1 ${errors.industry ? "border-red-500" : ""}`}
             />
+            {errors.industry && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.industry.message}
+              </p>
+            )}
           </div>
 
           {/* Company Size */}
@@ -225,10 +282,25 @@ const OrganizationDetails: React.FC = () => {
             <Label htmlFor="companySize">Company Size</Label>
             <Input
               id="companySize"
-              {...form.register("companySize")}
+              type="number"
+              min={1}
+              step={1}
+              {...register("companySize", {
+                required: "Company size is required",
+                valueAsNumber: true,
+                min: {
+                  value: 1,
+                  message: "Company size must be at least 1",
+                },
+              })}
               disabled={!isEditing}
-              className="mt-1"
+              className={`mt-1 ${errors.companySize ? "border-red-500" : ""}`}
             />
+            {errors.companySize && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.companySize.message}
+              </p>
+            )}
           </div>
 
           {/* Street Address */}
@@ -238,11 +310,18 @@ const OrganizationDetails: React.FC = () => {
               <HiOutlineMapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 id="streetAddress"
-                {...form.register("streetAddress")}
+                {...register("streetAddress", {
+                  required: "Street address is required",
+                })}
                 disabled={!isEditing}
-                className="pl-10"
+                className={`pl-10 ${errors.streetAddress ? "border-red-500" : ""}`}
               />
             </div>
+            {errors.streetAddress && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.streetAddress.message}
+              </p>
+            )}
           </div>
 
           {/* City */}
@@ -250,10 +329,15 @@ const OrganizationDetails: React.FC = () => {
             <Label htmlFor="city">City</Label>
             <Input
               id="city"
-              {...form.register("city")}
+              {...register("city", {
+                required: "City is required",
+              })}
               disabled={!isEditing}
-              className="mt-1"
+              className={`mt-1 ${errors.city ? "border-red-500" : ""}`}
             />
+            {errors.city && (
+              <p className="mt-1 text-xs text-red-600">{errors.city.message}</p>
+            )}
           </div>
 
           {/* State */}
@@ -261,10 +345,17 @@ const OrganizationDetails: React.FC = () => {
             <Label htmlFor="state">State</Label>
             <Input
               id="state"
-              {...form.register("state")}
+              {...register("state", {
+                required: "State is required",
+              })}
               disabled={!isEditing}
-              className="mt-1"
+              className={`mt-1 ${errors.state ? "border-red-500" : ""}`}
             />
+            {errors.state && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.state.message}
+              </p>
+            )}
           </div>
 
           {/* Postcode */}
@@ -272,10 +363,21 @@ const OrganizationDetails: React.FC = () => {
             <Label htmlFor="postcode">Postcode</Label>
             <Input
               id="postcode"
-              {...form.register("postcode")}
+              {...register("postcode", {
+                required: "Postcode is required",
+                pattern: {
+                  value: /^\d{4}$/,
+                  message: "Postcode must be a 4-digit number",
+                },
+              })}
               disabled={!isEditing}
-              className="mt-1"
+              className={`mt-1 ${errors.postcode ? "border-red-500" : ""}`}
             />
+            {errors.postcode && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.postcode.message}
+              </p>
+            )}
           </div>
 
           {/* Organization Phone */}
@@ -285,11 +387,22 @@ const OrganizationDetails: React.FC = () => {
               <HiOutlinePhone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 id="organizationPhone"
-                {...form.register("organizationPhone")}
+                {...register("organizationPhone", {
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^[0-9+()\-\s]{6,20}$/,
+                    message: "Enter a valid phone number",
+                  },
+                })}
                 disabled={!isEditing}
-                className="pl-10"
+                className={`pl-10 ${errors.organizationPhone ? "border-red-500" : ""}`}
               />
             </div>
+            {errors.organizationPhone && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.organizationPhone.message}
+              </p>
+            )}
           </div>
 
           {/* Website */}
@@ -299,11 +412,22 @@ const OrganizationDetails: React.FC = () => {
               <HiOutlineGlobeAlt className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 id="website"
-                {...form.register("website")}
+                {...register("website", {
+                  required: "Website is required",
+                  pattern: {
+                    value: /^https?:\/\/.+/i,
+                    message: "Website must start with http:// or https://",
+                  },
+                })}
                 disabled={!isEditing}
-                className="pl-10"
+                className={`pl-10 ${errors.website ? "border-red-500" : ""}`}
               />
             </div>
+            {errors.website && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.website.message}
+              </p>
+            )}
           </div>
 
           {/* Fiscal Year End */}
@@ -314,11 +438,18 @@ const OrganizationDetails: React.FC = () => {
               <Input
                 id="fiscalYearEnd"
                 type="date"
-                {...form.register("fiscalYearEnd")}
+                {...register("fiscalYearEnd", {
+                  required: "Fiscal year end date is required",
+                })}
                 disabled={!isEditing}
-                className="pl-10"
+                className={`pl-10 ${errors.fiscalYearEnd ? "border-red-500" : ""}`}
               />
             </div>
+            {errors.fiscalYearEnd && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.fiscalYearEnd.message}
+              </p>
+            )}
           </div>
         </div>
       </form>

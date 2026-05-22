@@ -6,13 +6,11 @@ import { useRouter } from "next/navigation";
 import ProjectTableRow from "./ProjectTableRow";
 import type { Project as ProjectType } from "@/Type/AdminDashboard/ProjectManagement";
 import { toastManager } from "@/components/ui/toast";
-import { useAxios } from "@/Hooks/useAxiosInstance";
 import SendEmailModal from "../UserManagement/SendEmailModal";
 
 //========== Project Management Component ==========
 const Project = () => {
   const router = useRouter();
-  const axios = useAxios();
   const [projects, setProjects] = useState<ProjectType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,15 +21,57 @@ const Project = () => {
     null,
   );
 
+  const extractProjectList = (payload: unknown): ProjectType[] => {
+    if (Array.isArray(payload)) {
+      return payload as ProjectType[];
+    }
+
+    if (payload && typeof payload === "object") {
+      const record = payload as {
+        success?: boolean;
+        data?: unknown;
+        results?: unknown;
+      };
+
+      if (Array.isArray(record.data)) {
+        return record.data as ProjectType[];
+      }
+
+      if (Array.isArray(record.results)) {
+        return record.results as ProjectType[];
+      }
+    }
+
+    return [];
+  };
+
   //========== Fetch Projects ==========
   const fetchProjects = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("tax_project/adminlist/");
-      if (response.data?.success && response.data.data) {
-        setProjects(response.data.data);
+      const token =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("accessToken") ||
+            window.sessionStorage.getItem("accessToken")
+          : null;
+
+      const response = await fetch("http://31.97.145.112/api/tax_project/admin/projects/", {
+        method: "GET",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    } catch {
+
+      const data = await response.json();
+      console.log("Fetched projects:", data);
+      setProjects(extractProjectList(data));
+    } catch (error) {
+      console.error("Failed to fetch admin projects:", error);
       toastManager.add({
         type: "error",
         title: "Error",
@@ -40,7 +80,7 @@ const Project = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [axios]);
+  }, []);
 
   useEffect(() => {
     fetchProjects();
@@ -80,10 +120,30 @@ const Project = () => {
     if (!selectedProject) return;
     try {
       setIsSendingEmail(true);
-      await axios.post(`users/send-mail/${selectedProject.id}/`, {
-        subject: data.subject,
-        message: data.body,
-      });
+      const token =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("accessToken") ||
+            window.sessionStorage.getItem("accessToken")
+          : null;
+
+      const response = await fetch(
+        `http://31.97.145.112/api/users/send-mail/${selectedProject.id}/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            subject: data.subject,
+            message: data.body,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
       setIsEmailModalOpen(false);
 
@@ -115,21 +175,20 @@ const Project = () => {
   };
 
   const handleDownload = (project: ProjectType) => {
-    if(project.status.toLowerCase() !== "completed") {
-    toastManager.add({
-      type: "error",
-      title: "Project Not Completed",
-      description: `Cannot download report for ${project.project_title}. Project is not completed.`,
-    });
-  }
-    else {
+    if (project.status.toLowerCase() !== "completed") {
+      toastManager.add({
+        type: "error",
+        title: "Project Not Completed",
+        description: `Cannot download report for ${project.project_title}. Project is not completed.`,
+      });
+    } else {
       toastManager.add({
         type: "success",
         title: "Download Ready",
         description: `Report for ${project.project_title} is ready for download.`,
       });
     }
-}
+  };
 
   return (
     <div className="space-y-8 px-0 md:px-10 py-8 lg:px-18">
@@ -176,7 +235,6 @@ const Project = () => {
           <option value="all">All Status</option>
           <option value="pending">Pending</option>
           <option value="completed">Completed</option>
-       
         </select>
       </div>
 
@@ -193,20 +251,13 @@ const Project = () => {
                   Industry
                 </th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
-                  Financial Year
+                  Project Year
                 </th>
-                <th className="text-left p-4 text-sm font-semibold text-gray-700">
-                  Staff
-                </th>
-                <th className="text-left p-4 text-sm font-semibold text-gray-700">
-                  R&D Expenditure
-                </th>
+                
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
                   Status
                 </th>
-                <th className="text-left p-4 text-sm font-semibold text-gray-700">
-                  Last Updated
-                </th>
+                
                 <th className="text-left p-4 text-sm font-semibold text-gray-700">
                   Actions
                 </th>
@@ -219,7 +270,6 @@ const Project = () => {
                   project={project}
                   onView={handleView}
                   onEmail={handleEmail}
-                  
                 />
               ))}
             </tbody>

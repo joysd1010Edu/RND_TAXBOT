@@ -21,23 +21,55 @@ import {
   AlertDialogDescription,
   AlertDialogClose,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogPopup,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { FaPlus } from "react-icons/fa";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useRouter } from "next/navigation";
+import { Label } from "@/components/ui/label";
+
+const projectSchema = z.object({
+  title: z.string().min(1, { message: "Title is required" }),
+  project_year: z.string().min(1, { message: "Project year is required" }),
+  project_type: z.enum(["NEW", "CONTINUING"], {
+    message: "Select a project type",
+  }),
+  industry: z.string().optional(),
+  budget: z.string().optional(),
+  start_date: z.string().optional(),
+  finish_date: z.string().optional(),
+  input_method: z.enum(["FILE", "MANUAL"], {
+    message: "Select an input method",
+  }),
+});
+
+type ProjectFormDataSchema = z.infer<typeof projectSchema>;
 
 //========== Status Derivation ===========
 const deriveProgress = (status: string): number => {
-  const s = status.toLowerCase();
-  if (s === "completed" || s === "approved") return 100;
-  if (s === "under_review" || s === "submitted") return 100;
+  const s = status.toUpperCase();
+  if (s === "APPROVED") return 100;
+  if (s === "PENDING") return 80;
+  if (s === "REJECTED") return 50;
   return 0;
 };
 
 const mapApiStatus = (status: string): ProjectStatus => {
-  const s = status.toLowerCase();
-  if (s === "completed" || s === "approved") return "completed";
-  if (s === "under_review") return "under_review";
-  if (s === "submitted" || s === "pending") return "pending-review";
-  if (s === "draft") return "draft";
-  return "pending-review";
+  const s = status.toUpperCase();
+  if (s === "APPROVED") return "APPROVED";
+  if (s === "PENDING") return "PENDING";
+  if (s === "REJECTED") return "REJECTED";
+  return "DRAFT";
 };
 
 //========== Load localStorage Drafts ===========
@@ -50,13 +82,13 @@ const loadLocalDrafts = (): Project[] => {
     if (!raw) continue;
     try {
       const parsed: ProjectFormData = JSON.parse(raw);
-      if (parsed.status !== "draft") continue;
+      if (parsed.status?.toLowerCase() !== "draft") continue;
       drafts.push({
         id: parsed.id || key.replace("project_", ""),
         title: parsed.projectTitle || "Untitled Draft",
         fiscalYear: parsed.financialYear ? `FY ${parsed.financialYear}` : "N/A",
         progress: 0,
-        status: "draft",
+        status: "DRAFT",
         lastUpdated: parsed.updatedAt
           ? new Date(parsed.updatedAt).toLocaleDateString()
           : "N/A",
@@ -73,31 +105,86 @@ const loadLocalDrafts = (): Project[] => {
 //========== My Projects Component ===========
 const MyProject: React.FC = () => {
   const axios = useAxios();
+  const router = useRouter();
   const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: "all",
   });
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProjectFormDataSchema>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      project_type: "NEW",
+      input_method: "MANUAL",
+    },
+  });
+
+  const onProjectSubmit = async (data: ProjectFormDataSchema) => {
+    try {
+      setIsSubmitting(true);
+      const payload = { ...data, name: data.title };
+      console.log("Submitting project with payload:", payload);
+      const res = await axios.post("/tax_project/projects/", payload);
+
+      const newProjectId = res.data?.id;
+      if (newProjectId) {
+        toastManager.add({
+          title: "Success",
+          description: "Project created successfully",
+          type: "success",
+        });
+        setIsModalOpen(false);
+        reset();
+        router.push(`/user/MyProjects/${newProjectId}`);
+      } else {
+        throw new Error("No ID returned from API");
+      }
+    } catch (error) {
+      console.error("Project creation failed", error);
+      toastManager.add({
+        title: "Error",
+        description: "Failed to create project",
+        type: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   //========== Load Data ===========
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("tax_project/userlist/");
-      const apiData: Record<string, string>[] = response.data?.data ?? [];
+      const response = await axios.get("/tax_project/projects/");
+      // Some APIs wrap it in data.data or similar, or just a direct array. Handling both:
+      const apiData: any[] = Array.isArray(response.data)
+        ? response.data
+        : (response.data?.data ?? []);
       const apiProjects: Project[] = apiData.map((p) => ({
         id: String(p.id),
-        title: p.project_title,
-        fiscalYear: p.financial_year ? `FY ${p.financial_year}` : "N/A",
-        progress: deriveProgress(p.status),
-        status: mapApiStatus(p.status),
+        title: p.title || p.project_title || "Untitled Project",
+        fiscalYear:
+          p.project_year || p.financial_year
+            ? `FY ${p.project_year || p.financial_year}`
+            : "N/A",
+        progress: deriveProgress(p.status || ""),
+        status: mapApiStatus(p.status || ""),
         lastUpdated: p.updated_at
           ? new Date(p.updated_at).toLocaleDateString()
           : "N/A",
-        canEdit: false,
-        canRenew: p.status === "completed" || p.status === "approved",
+        canEdit: p.status === "DRAFT" || p.status === "REJECTED",
+        canRenew: p.status === "APPROVED",
       }));
 
       const localDrafts = loadLocalDrafts();
@@ -121,24 +208,32 @@ const MyProject: React.FC = () => {
   //========== Delete Project ===========
   const confirmDelete = useCallback(async () => {
     if (!deleteTarget) return;
-    if (deleteTarget.canEdit) {
-      localStorage.removeItem(`project_${deleteTarget.id}`);
+
+    // Attempt local storage delete first if it might be an unsaved draft
+    const localKey = `project_${deleteTarget.id}`;
+    if (localStorage.getItem(localKey)) {
+      localStorage.removeItem(localKey);
+    }
+
+    try {
+      // Only hit the API if it's not a purely local ID (usually UUID or numbers)
+      await axios.delete(`/tax_project/projects/${deleteTarget.id}/`);
       setAllProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
       toastManager.add({
-        title: "Draft Deleted",
-        description: "The draft has been removed.",
+        title: "Project Deleted",
+        description: "The project has been deleted successfully.",
         type: "success",
       });
-    } else {
-      try {
-        await axios.delete(`tax_project/userlist/${deleteTarget.id}/`);
+    } catch {
+      // If API fails it might just be because it was a purely local draft that had no backend record yet
+      if (localStorage.getItem(localKey) === null) {
         setAllProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
         toastManager.add({
-          title: "Project Deleted",
-          description: "The project has been deleted successfully.",
+          title: "Draft Deleted",
+          description: "The local draft has been removed.",
           type: "success",
         });
-      } catch {
+      } else {
         toastManager.add({
           title: "Delete Failed",
           description: "Failed to delete the project. Please try again.",
@@ -197,9 +292,9 @@ const MyProject: React.FC = () => {
 
       {/*========= Search and Filter Section =========*/}
       <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
           {/*========= Search Input =========*/}
-          <div className="flex-1 relative">
+          <div className="relative flex-1 w-full">
             <MdSearch
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={20}
@@ -214,7 +309,7 @@ const MyProject: React.FC = () => {
           </div>
 
           {/*========= Status Filter =========*/}
-          <div className="relative sm:w-64">
+          <div className="relative w-full sm:w-48 shrink-0">
             <MdFilterList
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
               size={20}
@@ -225,12 +320,187 @@ const MyProject: React.FC = () => {
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white cursor-pointer"
             >
               <option value="all">All Statuses</option>
-              <option value="draft">Draft</option>
-              <option value="completed">Completed</option>
-              <option value="pending-review">Pending Review</option>
-              <option value="under_review">Sent for Review</option>
+              <option value="DRAFT">In Progress (Draft)</option>
+              <option value="APPROVED">Approved</option>
+              <option value="PENDING">Under Review (Pending)</option>
+              <option value="REJECTED">Action Needed (Rejected)</option>
             </select>
           </div>
+
+          {/*========= Create Project Modal =========*/}
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger
+              render={
+                <Button className="bg-indigo-600  hover:bg-indigo-700 text-white w-full sm:w-auto shrink-0 h-11.5" />
+              }
+            >
+              <FaPlus size={16} />
+              <span className="ml-2  text-lg">Create Project</span>
+            </DialogTrigger>
+            <DialogPopup className="sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit(onProjectSubmit)}>
+                <div className="p-6 max-h-[70vh] overflow-y-auto space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="text-lg">
+                      Project Title *
+                    </Label>
+                    <Input
+                      id="title"
+                      {...register("title")}
+                      className={`text-lg h-12 ${errors.title ? "border-red-500" : ""}`}
+                      placeholder="e.g. AI Workflow Optimization"
+                    />
+                    {errors.title && (
+                      <p className="text-red-500 text-sm">
+                        {errors.title.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="project_year" className="text-lg">
+                        Financial Year *
+                      </Label>
+                      <Input
+                        id="project_year"
+                        {...register("project_year")}
+                        className={`text-lg h-12 ${errors.project_year ? "border-red-500" : ""}`}
+                        placeholder="e.g. FY 2024-25"
+                      />
+                      {errors.project_year && (
+                        <p className="text-red-500 text-sm">
+                          {errors.project_year.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="project_type" className="text-lg">
+                        Project Type *
+                      </Label>
+                      <select
+                        id="project_type"
+                        {...register("project_type")}
+                        className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-lg"
+                      >
+                        <option value="NEW">New Project</option>
+                        <option value="CONTINUING">Continuing Project</option>
+                      </select>
+                      {errors.project_type && (
+                        <p className="text-red-500 text-sm">
+                          {errors.project_type.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="start_date" className="text-lg">
+                        Start Date
+                      </Label>
+                      <Input
+                        id="start_date"
+                        type="date"
+                        {...register("start_date")}
+                        className="text-lg h-12"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="finish_date" className="text-lg">
+                        Finish Date
+                      </Label>
+                      <Input
+                        id="finish_date"
+                        type="date"
+                        {...register("finish_date")}
+                        className="text-lg h-12"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="industry" className="text-lg">
+                        Industry
+                      </Label>
+                      <Input
+                        id="industry"
+                        {...register("industry")}
+                        className="text-lg h-12"
+                        placeholder="e.g. Software Development"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="budget" className="text-lg">
+                        Budget
+                      </Label>
+                      <Input
+                        id="budget"
+                        type="number"
+                        {...register("budget")}
+                        className="text-lg h-12"
+                        placeholder="e.g. 50000"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-2">
+                    <Label className="text-lg">Input Method *</Label>
+                    <div className="flex items-center gap-6 mt-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="MANUAL"
+                          {...register("input_method")}
+                          className="w-5 h-5 text-indigo-600"
+                        />
+                        <span className="text-lg font-medium">
+                          Manual Entry
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="FILE"
+                          {...register("input_method")}
+                          className="w-5 h-5 text-indigo-600"
+                        />
+                        <span className="text-lg font-medium">File Upload</span>
+                      </label>
+                    </div>
+                    {errors.input_method && (
+                      <p className="text-red-500 text-sm">
+                        {errors.input_method.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <DialogFooter className="px-6 pb-6 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsModalOpen(false)}
+                    disabled={isSubmitting}
+                    className="text-lg h-12 px-6"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-lg h-12 px-6"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Creating..." : "Save"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogPopup>
+          </Dialog>
         </div>
       </div>
 

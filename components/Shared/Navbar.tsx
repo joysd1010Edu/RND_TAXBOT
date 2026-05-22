@@ -97,15 +97,16 @@ const Navbar: React.FC<NavbarProps> = ({
       icon: <MdDashboard size={20} />,
     },
     {
-      label: "Create new project",
-      href: "/user/CreateProject",
-      icon: <FaPlus size={20} />,
-    },
-    {
       label: "My Projects",
       href: "/user/MyProjects",
       icon: <MdFolder size={20} />,
     },
+    // {
+    //   label: "Create new project",
+    //   href: "/user/CreateProject",
+    //   icon: <FaPlus size={20} />,
+    // },
+   
     { label: "AI Chat", href: "/user/AIChat", icon: <MdMessage size={20} /> },
     {
       label: "Laws & Guidelines",

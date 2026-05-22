@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   HiOutlineArrowLeft,
@@ -11,6 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { useAxios } from "@/Hooks/useAxiosInstance";
+import { toastManager } from "@/components/ui/toast";
 
 type SupportStatus = "pending" | "ongoing" | "resolved";
 
@@ -27,7 +29,7 @@ type SupportQuery = {
   excerpt: string;
   status: SupportStatus;
   timeAgo: string;
-  messages: SupportMessage[];
+  attachmentNames: string[];
 };
 
 const statusBadge: Record<SupportStatus, string> = {
@@ -36,116 +38,347 @@ const statusBadge: Record<SupportStatus, string> = {
   resolved: "bg-emerald-100 text-emerald-800",
 };
 
-const initialQueries: SupportQuery[] = [
-  {
-    id: "1",
-    userName: "John Smith",
-    subject: "Budget Section Clarification",
-    excerpt: "Need help understanding the budget form",
-    status: "pending",
-    timeAgo: "2 hours ago",
-    messages: [
+const toSupportStatus = (value: unknown): SupportStatus => {
+  const normalized = String(value || "pending").toLowerCase();
+  if (normalized === "resolved") return "resolved";
+  if (
+    normalized === "ongoing" ||
+    normalized === "in_progress" ||
+    normalized === "in-review"
+  ) {
+    return "ongoing";
+  }
+  return "pending";
+};
+
+const formatRelativeTime = (value: unknown): string => {
+  if (!value) return "-";
+  const parsedDate = new Date(String(value));
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(value);
+  }
+
+  const seconds = Math.floor((Date.now() - parsedDate.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+};
+
+const getUserName = (item: Record<string, unknown>): string => {
+  const user = item.user as Record<string, unknown> | undefined;
+  return (
+    (item.user_name as string) ||
+    (item.user_full_name as string) ||
+    (item.created_by_name as string) ||
+    (user?.full_name as string) ||
+    (user?.name as string) ||
+    "User"
+  );
+};
+
+const getAttachmentNames = (item: Record<string, unknown>): string[] => {
+  const names = new Set<string>();
+
+  const singleAttachmentName =
+    (item.attachment_name as string) ||
+    (item.file_name as string) ||
+    ((item.attachment as Record<string, unknown> | undefined)?.name as string);
+
+  if (singleAttachmentName) {
+    names.add(singleAttachmentName);
+  }
+
+  const attachments = Array.isArray(item.attachments)
+    ? (item.attachments as Array<Record<string, unknown>>)
+    : [];
+  attachments.forEach((attachment) => {
+    const name =
+      (attachment.name as string) ||
+      (attachment.file_name as string) ||
+      (attachment.filename as string);
+    if (name) names.add(name);
+  });
+
+  return Array.from(names);
+};
+
+const normalizeList = (payload: unknown): SupportQuery[] => {
+  const source = Array.isArray(payload)
+    ? payload
+    : Array.isArray((payload as Record<string, unknown>)?.results)
+      ? ((payload as Record<string, unknown>).results as unknown[])
+      : Array.isArray((payload as Record<string, unknown>)?.data)
+        ? ((payload as Record<string, unknown>).data as unknown[])
+        : [];
+
+  return source.map((raw): SupportQuery => {
+    const item = (raw || {}) as Record<string, unknown>;
+    const messageText =
+      (item.last_message as string) ||
+      (item.initial_message as string) ||
+      (item.description as string) ||
+      "";
+
+    return {
+      id: String(item.id || ""),
+      userName: getUserName(item),
+      subject: String(item.subject || "Untitled"),
+      excerpt: String(messageText).slice(0, 80),
+      status: toSupportStatus(item.status),
+      timeAgo: formatRelativeTime(item.updated_at || item.created_at),
+      attachmentNames: getAttachmentNames(item),
+    };
+  });
+};
+
+const normalizeMessages = (payload: unknown): SupportMessage[] => {
+  const detail = (payload || {}) as Record<string, unknown>;
+
+  const rawMessages = Array.isArray(detail.messages)
+    ? detail.messages
+    : Array.isArray(detail.replies)
+      ? detail.replies
+      : Array.isArray(detail.chat)
+        ? detail.chat
+        : [];
+
+  const mappedMessages = rawMessages.map((entry): SupportMessage => {
+    const item = (entry || {}) as Record<string, unknown>;
+    const senderRaw = String(
+      item.sender || item.role || item.user_type || "user",
+    ).toLowerCase();
+
+    const isAdminSender =
+      senderRaw.includes("support") ||
+      senderRaw.includes("admin") ||
+      senderRaw.includes("staff") ||
+      senderRaw.includes("assistant");
+
+    return {
+      sender: isAdminSender ? "admin" : "user",
+      content: String(item.message || item.content || item.text || ""),
+      timestamp: formatRelativeTime(item.created_at || item.timestamp),
+    };
+  });
+
+  if (mappedMessages.length > 0) {
+    return mappedMessages;
+  }
+
+  const initialMessage = String(detail.initial_message || "").trim();
+  if (initialMessage) {
+    return [
       {
         sender: "user",
-        content:
-          "Can you clarify how to enter subcontractor costs in the budget?",
-        timestamp: "2 hours ago",
+        content: initialMessage,
+        timestamp: formatRelativeTime(detail.created_at),
       },
-    ],
-  },
-  {
-    id: "2",
-    userName: "Sarah Johnson",
-    subject: "Evidence Upload Issue",
-    excerpt: "PDF upload stalls halfway",
-    status: "ongoing",
-    timeAgo: "5 hours ago",
-    messages: [
-      {
-        sender: "user",
-        content: "My evidence PDF will not finish uploading. Any size limits?",
-        timestamp: "5 hours ago",
-      },
-      {
-        sender: "admin",
-        content: "We are checking the upload worker logs now.",
-        timestamp: "4 hours ago",
-      },
-    ],
-  },
-  {
-    id: "3",
-    userName: "Emily Davis",
-    subject: "Project Timeline Extension",
-    excerpt: "Need guidance on extension request",
-    status: "resolved",
-    timeAgo: "2 days ago",
-    messages: [
-      {
-        sender: "user",
-        content: "How do I request more time for the reporting window?",
-        timestamp: "2 days ago",
-      },
-      {
-        sender: "admin",
-        content:
-          "You can submit an extension under Settings → Compliance; we attached the template.",
-        timestamp: "1 day ago",
-      },
-    ],
-  },
-];
+    ];
+  }
+
+  return [];
+};
 
 const SupportAdminPage = () => {
-  const [queries, setQueries] = useState<SupportQuery[]>(initialQueries);
-  const [selectedId, setSelectedId] = useState<string>(
-    initialQueries[0]?.id ?? "",
-  );
+  const axios = useAxios();
+  const [queries, setQueries] = useState<SupportQuery[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [reply, setReply] = useState("");
+  const [isLoadingList, setIsLoadingList] = useState(false);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
+
+  const selected = useMemo(
+    () => queries.find((q) => q.id === selectedId),
+    [queries, selectedId],
+  );
+
+  const fetchSupportList = useCallback(async () => {
+    try {
+      setIsLoadingList(true);
+      const response = await axios.get("/support_inbox/");
+      console.log("Fetched support inbox list:", response.data);
+      const payload = response.data?.data ?? response.data;
+      const normalized = normalizeList(payload);
+      setQueries(normalized);
+      setSelectedId((prev) => {
+        if (prev && normalized.some((item) => item.id === prev)) {
+          return prev;
+        }
+        return normalized[0]?.id || "";
+      });
+    } catch (error) {
+      console.error("Failed to fetch support list", error);
+      toastManager.add({
+        title: "Error",
+        description: "Could not load support inbox list.",
+        type: "error",
+      });
+    } finally {
+      setIsLoadingList(false);
+    }
+  }, [axios]);
+
+  const fetchSupportDetails = useCallback(
+    async (inboxId: string) => {
+      if (!inboxId) {
+        setMessages([]);
+        return;
+      }
+
+      try {
+        setIsLoadingDetails(true);
+        const response = await axios.get(`/support_inbox/${inboxId}/`);
+        const detail = response.data?.data ?? response.data;
+
+        setMessages(normalizeMessages(detail));
+
+        const status = toSupportStatus(
+          (detail as Record<string, unknown>)?.status,
+        );
+        const timeAgo = formatRelativeTime(
+          (detail as Record<string, unknown>)?.updated_at ||
+            (detail as Record<string, unknown>)?.created_at,
+        );
+        const attachmentNames = getAttachmentNames(
+          detail as Record<string, unknown>,
+        );
+        const userName = getUserName(detail as Record<string, unknown>);
+
+        setQueries((prev) =>
+          prev.map((item) =>
+            item.id === inboxId
+              ? {
+                  ...item,
+                  status,
+                  timeAgo,
+                  userName,
+                  attachmentNames:
+                    attachmentNames.length > 0
+                      ? attachmentNames
+                      : item.attachmentNames,
+                }
+              : item,
+          ),
+        );
+      } catch (error) {
+        console.error("Failed to fetch support details", error);
+        setMessages([]);
+        toastManager.add({
+          title: "Error",
+          description: "Could not load inbox details.",
+          type: "error",
+        });
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    },
+    [axios],
+  );
+
+  useEffect(() => {
+    fetchSupportList();
+  }, [fetchSupportList]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setMessages([]);
+      return;
+    }
+    fetchSupportDetails(selectedId);
+  }, [fetchSupportDetails, selectedId]);
 
   const filtered = useMemo(
     () =>
       queries.filter((q) => {
-        const matchSearch =
-          q.subject.toLowerCase().includes(search.toLowerCase()) ||
-          q.excerpt.toLowerCase().includes(search.toLowerCase()) ||
-          q.userName.toLowerCase().includes(search.toLowerCase());
-        return matchSearch;
+        const searchText = search.toLowerCase();
+        return (
+          q.subject.toLowerCase().includes(searchText) ||
+          q.excerpt.toLowerCase().includes(searchText) ||
+          q.userName.toLowerCase().includes(searchText)
+        );
       }),
     [queries, search],
   );
 
-  const selected = queries.find((q) => q.id === selectedId) || filtered[0];
+  const patchStatus = useCallback(
+    async (inboxId: string, status: SupportStatus) => {
+      try {
+        await axios.patch(`/support_inbox/${inboxId}/resolved/`, { status });
+      } catch (firstError) {
+        if (status === "resolved") {
+          await axios.patch(`/support_inbox/${inboxId}/resolved/`, {});
+          return;
+        }
+        throw firstError;
+      }
+    },
+    [axios],
+  );
 
-  const updateQuery = (
-    id: string,
-    updater: (q: SupportQuery) => SupportQuery,
-  ) => {
-    setQueries((prev) => prev.map((q) => (q.id === id ? updater(q) : q)));
+  const handleSendReply = async () => {
+    if (!selectedId || !reply.trim() || selected?.status === "resolved") return;
+
+    try {
+      setIsReplying(true);
+      await axios.post(`/support_inbox/${selectedId}/send/`, {
+        message: reply.trim(),
+      });
+
+      // Admin reply moves status to ongoing
+      await patchStatus(selectedId, "ongoing");
+
+      setReply("");
+      await fetchSupportDetails(selectedId);
+      await fetchSupportList();
+
+      toastManager.add({
+        title: "Success",
+        description: "Reply sent successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to send support reply", error);
+      toastManager.add({
+        title: "Error",
+        description: "Failed to send reply.",
+        type: "error",
+      });
+    } finally {
+      setIsReplying(false);
+    }
   };
 
-  const handleSendReply = () => {
-    if (!selected || !reply.trim()) return;
-    const timestamp = "just now";
-    updateQuery(selected.id, (q) => ({
-      ...q,
-      timeAgo: timestamp,
-      messages: [
-        ...q.messages,
-        { sender: "admin", content: reply.trim(), timestamp },
-      ],
-    }));
-    setReply("");
-  };
+  const handleMarkResolved = async () => {
+    if (!selectedId || selected?.status === "resolved") return;
 
-  const markResolved = () => {
-    if (!selected) return;
-    updateQuery(selected.id, (q) => ({
-      ...q,
-      status: "resolved",
-      timeAgo: "just now",
-    }));
+    try {
+      setIsResolving(true);
+      await patchStatus(selectedId, "resolved");
+      await fetchSupportDetails(selectedId);
+      await fetchSupportList();
+      toastManager.add({
+        title: "Success",
+        description: "Support request marked as resolved.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to mark support request as resolved", error);
+      toastManager.add({
+        title: "Error",
+        description: "Failed to update support status.",
+        type: "error",
+      });
+    } finally {
+      setIsResolving(false);
+    }
   };
 
   return (
@@ -176,9 +409,14 @@ const SupportAdminPage = () => {
               className="bg-slate-50"
             />
 
-            <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-130 overflow-y-auto pr-1">
+              {isLoadingList && queries.length === 0 && (
+                <div className="text-center text-sm text-slate-500 py-8">
+                  Loading support inbox...
+                </div>
+              )}
               {filtered.map((item) => {
-                const isActive = item.id === selected?.id;
+                const isActive = item.id === selectedId;
                 return (
                   <button
                     key={item.id}
@@ -209,7 +447,7 @@ const SupportAdminPage = () => {
                   </button>
                 );
               })}
-              {filtered.length === 0 && (
+              {filtered.length === 0 && !isLoadingList && (
                 <div className="text-center text-sm text-slate-500 py-8">
                   No messages found
                 </div>
@@ -217,7 +455,7 @@ const SupportAdminPage = () => {
             </div>
           </div>
 
-          <div className="bg-white border col-span-2 border-slate-200 rounded-2xl shadow-sm p-7 min-h-[520px] flex flex-col">
+          <div className="bg-white border col-span-2 border-slate-200 rounded-2xl shadow-sm p-7 min-h-130 flex flex-col">
             {!selected ? (
               <div className="flex flex-1 flex-col items-center justify-center text-slate-500 gap-2">
                 <HiOutlineInboxStack className="w-12 h-12" />
@@ -241,17 +479,39 @@ const SupportAdminPage = () => {
                       </span>
                       <span>{selected.timeAgo}</span>
                     </div>
+                    {selected.attachmentNames.length > 0 && (
+                      <div className="mt-2 text-sm text-slate-700">
+                        Attachments: {selected.attachmentNames.join(", ")}
+                      </div>
+                    )}
                   </div>
-                  {selected.status !== "resolved" && (
-                    <Button size="sm" variant="outline" onClick={markResolved}>
-                      <HiOutlineCheckCircle className="w-4 h-4 mr-1" /> Mark
-                      resolved
-                    </Button>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleMarkResolved}
+                    disabled={selected.status === "resolved" || isResolving}
+                  >
+                    <HiOutlineCheckCircle className="w-4 h-4 mr-1" />
+                    {selected.status === "resolved"
+                      ? "Resolved"
+                      : isResolving
+                        ? "Marking..."
+                        : "Mark resolved"}
+                  </Button>
                 </div>
 
                 <div className="flex-1 space-y-4 py-4 overflow-y-auto pr-2">
-                  {selected.messages.map((msg, idx) => (
+                  {isLoadingDetails && (
+                    <div className="text-sm text-slate-500">
+                      Loading thread...
+                    </div>
+                  )}
+                  {!isLoadingDetails && messages.length === 0 && (
+                    <div className="text-sm text-slate-500">
+                      No messages yet.
+                    </div>
+                  )}
+                  {messages.map((msg, idx) => (
                     <div key={idx} className="flex flex-col gap-1">
                       <div className="text-xs uppercase tracking-wide text-slate-500">
                         {msg.sender === "admin" ? "You" : selected.userName}
@@ -277,16 +537,28 @@ const SupportAdminPage = () => {
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
                     rows={3}
-                    placeholder="Write your response..."
+                    disabled={selected.status === "resolved"}
+                    placeholder={
+                      selected.status === "resolved"
+                        ? "This request is resolved"
+                        : "Write your response..."
+                    }
                     className="bg-slate-50"
                   />
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-xs text-slate-500 flex items-center gap-2">
                       <HiOutlinePaperAirplane className="w-4 h-4" />
-                      Replies send to the user and stay in the thread.
+                      Replies are saved in this thread.
                     </div>
-                    <Button onClick={handleSendReply} disabled={!reply.trim()}>
-                      Send reply
+                    <Button
+                      onClick={handleSendReply}
+                      disabled={
+                        selected.status === "resolved" ||
+                        isReplying ||
+                        !reply.trim()
+                      }
+                    >
+                      {isReplying ? "Sending..." : "Send reply"}
                     </Button>
                   </div>
                 </div>

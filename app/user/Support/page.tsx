@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   HiOutlineArrowLeft,
@@ -11,6 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { useAxios } from "@/Hooks/useAxiosInstance";
+import { toastManager } from "@/components/ui/toast";
 
 type SupportStatus = "pending" | "ongoing" | "resolved";
 
@@ -26,7 +28,6 @@ type SupportQuery = {
   excerpt: string;
   status: SupportStatus;
   timeAgo: string;
-  messages: SupportMessage[];
   attachmentName?: string;
 };
 
@@ -36,73 +37,226 @@ const statusBadge: Record<SupportStatus, string> = {
   resolved: "bg-emerald-100 text-emerald-800",
 };
 
-const initialQueries: SupportQuery[] = [
-  {
-    id: "1",
-    subject: "Budget Section Clarification",
-    excerpt: "Need help understanding the budget form",
-    status: "pending",
-    timeAgo: "2 hours ago",
-    messages: [
+const toSupportStatus = (value: unknown): SupportStatus => {
+  const normalized = String(value || "pending").toLowerCase();
+  if (normalized === "resolved") return "resolved";
+  if (normalized === "ongoing" || normalized === "in_progress") {
+    return "ongoing";
+  }
+  return "pending";
+};
+
+const formatRelativeTime = (value: unknown): string => {
+  if (!value) return "-";
+  const parsedDate = new Date(String(value));
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(value);
+  }
+
+  const seconds = Math.floor((Date.now() - parsedDate.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+};
+
+const getAttachmentName = (
+  item: Record<string, unknown>,
+): string | undefined => {
+  return (
+    (item.attachment_name as string) ||
+    ((item.attachment as Record<string, unknown> | undefined)
+      ?.name as string) ||
+    (item.file_name as string) ||
+    undefined
+  );
+};
+
+const normalizeList = (payload: unknown): SupportQuery[] => {
+  const source = Array.isArray(payload)
+    ? payload
+    : Array.isArray((payload as Record<string, unknown>)?.results)
+      ? ((payload as Record<string, unknown>).results as unknown[])
+      : Array.isArray((payload as Record<string, unknown>)?.data)
+        ? ((payload as Record<string, unknown>).data as unknown[])
+        : [];
+
+  return source.map((raw): SupportQuery => {
+    const item = (raw || {}) as Record<string, unknown>;
+    const messageText =
+      (item.last_message as string) ||
+      (item.initial_message as string) ||
+      (item.description as string) ||
+      "";
+    return {
+      id: String(item.id || ""),
+      subject: String(item.subject || "Untitled"),
+      excerpt: String(messageText).slice(0, 80),
+      status: toSupportStatus(item.status),
+      timeAgo: formatRelativeTime(item.updated_at || item.created_at),
+      attachmentName: getAttachmentName(item),
+    };
+  });
+};
+
+const normalizeMessages = (payload: unknown): SupportMessage[] => {
+  const detail = (payload || {}) as Record<string, unknown>;
+
+  const rawMessages = Array.isArray(detail.messages)
+    ? detail.messages
+    : Array.isArray(detail.replies)
+      ? detail.replies
+      : Array.isArray(detail.chat)
+        ? detail.chat
+        : [];
+
+  const mappedMessages = rawMessages.map((entry): SupportMessage => {
+    const item = (entry || {}) as Record<string, unknown>;
+    const senderRaw = String(
+      item.sender || item.role || item.user_type || "you",
+    ).toLowerCase();
+    const isSupportSender =
+      senderRaw.includes("support") ||
+      senderRaw.includes("admin") ||
+      senderRaw.includes("staff") ||
+      senderRaw.includes("assistant");
+
+    return {
+      sender: isSupportSender ? "support" : "you",
+      content: String(item.message || item.content || item.text || ""),
+      timestamp: formatRelativeTime(item.created_at || item.timestamp),
+    };
+  });
+
+  if (mappedMessages.length > 0) {
+    return mappedMessages;
+  }
+
+  const initialMessage = String(detail.initial_message || "").trim();
+  if (initialMessage) {
+    return [
       {
         sender: "you",
-        content:
-          "Can you clarify how to enter subcontractor costs in the budget?",
-        timestamp: "2 hours ago",
+        content: initialMessage,
+        timestamp: formatRelativeTime(detail.created_at),
       },
-    ],
-  },
-  {
-    id: "2",
-    subject: "Evidence Upload Issue",
-    excerpt: "PDF upload stalls halfway",
-    status: "ongoing",
-    timeAgo: "5 hours ago",
-    messages: [
-      {
-        sender: "you",
-        content: "My evidence PDF will not finish uploading. Any size limits?",
-        timestamp: "5 hours ago",
-      },
-      {
-        sender: "support",
-        content:
-          "Hi Sarah, please try again — we increased the upload limit to 25MB.",
-        timestamp: "4 hours ago",
-      },
-    ],
-  },
-  {
-    id: "3",
-    subject: "Project Timeline Extension",
-    excerpt: "Need guidance on extension request",
-    status: "resolved",
-    timeAgo: "2 days ago",
-    messages: [
-      {
-        sender: "you",
-        content: "How do I request more time for the reporting window?",
-        timestamp: "2 days ago",
-      },
-      {
-        sender: "support",
-        content:
-          "You can submit an extension request under Settings → Compliance. We attached the template.",
-        timestamp: "1 day ago",
-      },
-    ],
-  },
-];
+    ];
+  }
+
+  return [];
+};
 
 const SupportPage = () => {
-  const [queries, setQueries] = useState<SupportQuery[]>(initialQueries);
-  const [selectedId, setSelectedId] = useState<string>(
-    initialQueries[0]?.id ?? "",
-  );
+  const axios = useAxios();
+  const [queries, setQueries] = useState<SupportQuery[]>([]);
+  const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [newSubject, setNewSubject] = useState("");
   const [newBody, setNewBody] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
+  const [isLoadingList, setIsLoadingList] = useState(false);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyMessage, setReplyMessage] = useState("");
+
+  const selected = useMemo(
+    () => queries.find((q) => q.id === selectedId),
+    [queries, selectedId],
+  );
+
+  const fetchSupportList = useCallback(async () => {
+    try {
+      setIsLoadingList(true);
+      const response = await axios.get("/support_inbox/");
+      const payload = response.data?.data ?? response.data;
+      const normalized = normalizeList(payload);
+      setQueries(normalized);
+
+      setSelectedId((prev) => {
+        if (prev && normalized.some((item) => item.id === prev)) {
+          return prev;
+        }
+        return normalized[0]?.id || "";
+      });
+    } catch (error) {
+      console.error("Failed to fetch support list", error);
+      toastManager.add({
+        title: "Error",
+        description: "Could not load support inbox list.",
+        type: "error",
+      });
+    } finally {
+      setIsLoadingList(false);
+    }
+  }, [axios]);
+
+  const fetchSupportDetails = useCallback(
+    async (inboxId: string) => {
+      if (!inboxId) {
+        setMessages([]);
+        return;
+      }
+      try {
+        setIsLoadingDetails(true);
+        const response = await axios.get(`/support_inbox/${inboxId}/`);
+        const detail = response.data?.data ?? response.data;
+        const normalizedMessages = normalizeMessages(detail);
+        setMessages(normalizedMessages);
+
+        const detailStatus = toSupportStatus(
+          (detail as Record<string, unknown>)?.status,
+        );
+        const detailAttachmentName = getAttachmentName(
+          (detail || {}) as Record<string, unknown>,
+        );
+        const updatedTime = formatRelativeTime(
+          (detail as Record<string, unknown>)?.updated_at ||
+            (detail as Record<string, unknown>)?.created_at,
+        );
+
+        setQueries((prev) =>
+          prev.map((item) =>
+            item.id === inboxId
+              ? {
+                  ...item,
+                  status: detailStatus,
+                  timeAgo: updatedTime,
+                  attachmentName: detailAttachmentName || item.attachmentName,
+                }
+              : item,
+          ),
+        );
+      } catch (error) {
+        console.error("Failed to fetch support details", error);
+        setMessages([]);
+        toastManager.add({
+          title: "Error",
+          description: "Could not load inbox details.",
+          type: "error",
+        });
+      } finally {
+        setIsLoadingDetails(false);
+      }
+    },
+    [axios],
+  );
+
+  useEffect(() => {
+    fetchSupportList();
+  }, [fetchSupportList]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setMessages([]);
+      return;
+    }
+    fetchSupportDetails(selectedId);
+  }, [fetchSupportDetails, selectedId]);
 
   const filtered = useMemo(
     () =>
@@ -115,41 +269,126 @@ const SupportPage = () => {
     [queries, search],
   );
 
-  const selected = queries.find((q) => q.id === selectedId) || filtered[0];
-
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newSubject.trim() || !newBody.trim()) return;
-    const newItem: SupportQuery = {
-      id: crypto.randomUUID(),
-      subject: newSubject.trim(),
-      excerpt: newBody.trim().slice(0, 70),
-      status: "pending",
-      timeAgo: "just now",
-      messages: [
-        {
-          sender: "you",
-          content: newBody.trim(),
-          timestamp: "just now",
-        },
-      ],
-      attachmentName: attachment?.name,
-    };
-    setQueries((prev) => [newItem, ...prev]);
-    setSelectedId(newItem.id);
-    setNewSubject("");
-    setNewBody("");
-    setAttachment(null);
+
+    try {
+      setIsCreating(true);
+      let response;
+
+      if (attachment) {
+        const formData = new FormData();
+        formData.append("subject", newSubject.trim());
+        formData.append("initial_message", newBody.trim());
+        formData.append("attachment", attachment);
+        response = await axios.post("/support_inbox/create/", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } else {
+        response = await axios.post("/support_inbox/create/", {
+          subject: newSubject.trim(),
+          initial_message: newBody.trim(),
+        });
+      }
+
+      const created = response.data?.data ?? response.data;
+      const createdId = String((created as Record<string, unknown>)?.id || "");
+
+      setNewSubject("");
+      setNewBody("");
+      setAttachment(null);
+
+      await fetchSupportList();
+      if (createdId) {
+        setSelectedId(createdId);
+      }
+
+      toastManager.add({
+        title: "Success",
+        description: "Support request submitted successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to create support request", error);
+      toastManager.add({
+        title: "Error",
+        description: "Failed to submit support request.",
+        type: "error",
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const markResolved = () => {
-    if (!selected) return;
-    setQueries((prev) =>
-      prev.map((q) =>
-        q.id === selected.id
-          ? { ...q, status: "resolved", timeAgo: "just now" }
-          : q,
-      ),
-    );
+  const handleReply = async () => {
+    if (!selectedId || !replyMessage.trim()) return;
+    try {
+      setIsReplying(true);
+      await axios.post(`/support_inbox/${selectedId}/send/`, {
+        message: replyMessage.trim(),
+      });
+
+      // User follow-up moves the ticket back to pending
+      try {
+        await axios.patch(`/support_inbox/${selectedId}/resolved/`, {
+          status: "pending",
+        });
+      } catch (statusError) {
+        console.error(
+          "Failed to set pending status after user reply",
+          statusError,
+        );
+      }
+
+      setReplyMessage("");
+      await fetchSupportDetails(selectedId);
+      await fetchSupportList();
+      toastManager.add({
+        title: "Success",
+        description: "Reply sent successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to send reply", error);
+      toastManager.add({
+        title: "Error",
+        description: "Failed to send reply.",
+        type: "error",
+      });
+    } finally {
+      setIsReplying(false);
+    }
+  };
+
+  const handleMarkResolved = async () => {
+    if (!selectedId || selected?.status === "resolved") return;
+
+    try {
+      try {
+        await axios.patch(`/support_inbox/${selectedId}/resolved/`, {
+          status: "resolved",
+        });
+      } catch (firstError) {
+        await axios.patch(`/support_inbox/${selectedId}/resolved/`, {});
+      }
+
+      await fetchSupportDetails(selectedId);
+      await fetchSupportList();
+      toastManager.add({
+        title: "Success",
+        description: "Support request marked as resolved.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Failed to mark support request as resolved", error);
+      toastManager.add({
+        title: "Error",
+        description: "Failed to update support status.",
+        type: "error",
+      });
+    }
   };
 
   return (
@@ -180,9 +419,14 @@ const SupportPage = () => {
               className="bg-slate-50"
             />
 
-            <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-130 overflow-y-auto pr-1">
+              {isLoadingList && queries.length === 0 && (
+                <div className="text-center text-sm text-slate-500 py-8">
+                  Loading support inbox...
+                </div>
+              )}
               {filtered.map((item) => {
-                const isActive = item.id === selected?.id;
+                const isActive = item.id === selectedId;
                 return (
                   <button
                     key={item.id}
@@ -250,14 +494,14 @@ const SupportPage = () => {
               <Button
                 onClick={handleCreate}
                 className="w-full"
-                disabled={!newSubject.trim() || !newBody.trim()}
+                disabled={isCreating || !newSubject.trim() || !newBody.trim()}
               >
-                Submit request
+                {isCreating ? "Submitting..." : "Submit request"}
               </Button>
             </div>
           </div>
 
-          <div className="bg-white border col-span-2 border-slate-200 rounded-2xl shadow-sm p-7 min-h-[520px] flex flex-col">
+          <div className="bg-white border col-span-2 border-slate-200 rounded-2xl shadow-sm p-7 min-h-130 flex flex-col">
             {!selected ? (
               <div className="flex flex-1 flex-col items-center justify-center text-slate-500 gap-2">
                 <HiOutlineInboxStack className="w-12 h-12" />
@@ -285,15 +529,29 @@ const SupportPage = () => {
                     )}
                   </div>
                   {selected.status !== "resolved" && (
-                    <Button size="sm" variant="outline" onClick={markResolved}>
-                      <HiOutlineCheckCircle className="w-4 h-4 mr-1" /> Mark
-                      resolved
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleMarkResolved}
+                    >
+                      <HiOutlineCheckCircle className="w-4 h-4 mr-1" />
+                      Mark resolved
                     </Button>
                   )}
                 </div>
 
                 <div className="flex-1 space-y-4 py-4 overflow-y-auto pr-2">
-                  {selected.messages.map((msg, idx) => (
+                  {isLoadingDetails && (
+                    <div className="text-sm text-slate-500">
+                      Loading thread...
+                    </div>
+                  )}
+                  {!isLoadingDetails && messages.length === 0 && (
+                    <div className="text-sm text-slate-500">
+                      No messages yet.
+                    </div>
+                  )}
+                  {messages.map((msg, idx) => (
                     <div key={idx} className="flex flex-col gap-1">
                       <div className="text-xs uppercase tracking-wide text-slate-500">
                         {msg.sender === "you" ? "You" : "Support"}
@@ -315,12 +573,24 @@ const SupportPage = () => {
                 </div>
 
                 <div className="border-t border-slate-200 pt-4">
-                  <div className="text-sm text-slate-700 mb-2">
-                    Support will respond here once they review your query.
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <HiOutlinePaperAirplane className="w-4 h-4" />
-                    Keep this tab open; we will notify you by email as well.
+                  <Textarea
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    rows={3}
+                    placeholder="Write a follow-up reply..."
+                    className="bg-slate-50"
+                  />
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <HiOutlinePaperAirplane className="w-4 h-4" />
+                      Replies are sent to support and saved in this thread.
+                    </div>
+                    <Button
+                      onClick={handleReply}
+                      disabled={isReplying || !replyMessage.trim()}
+                    >
+                      {isReplying ? "Sending..." : "Send reply"}
+                    </Button>
                   </div>
                 </div>
               </>

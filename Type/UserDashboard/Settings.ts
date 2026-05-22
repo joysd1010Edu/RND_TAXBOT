@@ -8,7 +8,7 @@ export interface OrganizationForm {
   organizationName: string;
   abn: string;
   industry: string;
-  companySize: string;
+  companySize: number | undefined;
   streetAddress: string;
   city: string;
   state: string;
