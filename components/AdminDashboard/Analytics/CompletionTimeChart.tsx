@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import {
   LineChart,
   Line,
@@ -9,54 +9,30 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useAxios } from "@/Hooks/useAxiosInstance";
 
 interface CompletionTimePoint {
   month: string;
-  avg_completion_minutes: number;
+  avg_days: number;
+  project_count: number;
+}
+
+interface CompletionTimeChartProps {
+  data: CompletionTimePoint[];
+  isLoading: boolean;
 }
 
 //========== Completion Time Chart Component ==========
-const CompletionTimeChart: React.FC = () => {
-  const axios = useAxios();
-  const [data, setData] = useState<CompletionTimePoint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchData = useCallback(async () => {
-    try {
-      const response = await axios.get(
-        "calculations/analytics/avg_completion_time/",
-      );
-      if (response.data?.success && Array.isArray(response.data.data)) {
-        setData(
-          response.data.data.map(
-            (item: { month: string; avg_completion_minutes: number }) => ({
-              month: item.month,
-              avg_completion_minutes: Number(
-                item.avg_completion_minutes.toFixed(1),
-              ),
-            }),
-          ),
-        );
-      }
-    } catch {
-      // silent
-    } finally {
-      setIsLoading(false);
-    }
-  }, [axios]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
+const CompletionTimeChart: React.FC<CompletionTimeChartProps> = ({
+  data,
+  isLoading,
+}) => {
   const defaultData: CompletionTimePoint[] = [
-    { month: "Jan", avg_completion_minutes: 0 },
-    { month: "Feb", avg_completion_minutes: 0 },
-    { month: "Mar", avg_completion_minutes: 0 },
-    { month: "Apr", avg_completion_minutes: 0 },
-    { month: "May", avg_completion_minutes: 0 },
-    { month: "Jun", avg_completion_minutes: 0 },
+    { month: "Jan", avg_days: 0, project_count: 0 },
+    { month: "Feb", avg_days: 0, project_count: 0 },
+    { month: "Mar", avg_days: 0, project_count: 0 },
+    { month: "Apr", avg_days: 0, project_count: 0 },
+    { month: "May", avg_days: 0, project_count: 0 },
+    { month: "Jun", avg_days: 0, project_count: 0 },
   ];
 
   const chartData = data.length > 0 ? data : defaultData;
@@ -82,16 +58,21 @@ const CompletionTimeChart: React.FC = () => {
               stroke="#6b7280"
               fontSize={12}
               label={{
-                value: "Minutes",
+                value: "Days",
                 angle: -90,
                 position: "insideLeft",
                 style: { fontSize: 12, fill: "#6b7280" },
               }}
             />
-            <Tooltip formatter={(value) => [`${value} min`, "Avg Time"]} />
+            <Tooltip
+              formatter={(value, name, props) => [
+                `${value} days`,
+                `Avg Time${props?.payload?.project_count ? ` (${props.payload.project_count} projects)` : ""}`,
+              ]}
+            />
             <Line
               type="monotone"
-              dataKey="avg_completion_minutes"
+              dataKey="avg_days"
               stroke="#3b82f6"
               strokeWidth={2}
               name="Avg Completion Time"

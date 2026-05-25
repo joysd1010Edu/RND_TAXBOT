@@ -1,74 +1,45 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useAxios } from "@/Hooks/useAxiosInstance";
 
-interface FeedbackDataPoint {
-  category: string;
-  rating: number;
+interface RatingTrendPoint {
+  month: string;
+  avg_score: number;
 }
 
-//========== User Feedback Chart Component ==========
-const IncompleteSectionsChart: React.FC = () => {
-  const axios = useAxios();
-  const [data, setData] = useState<FeedbackDataPoint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface UserRatingChartProps {
+  data: RatingTrendPoint[];
+  overall: {
+    avg_score: number;
+    avg_technical_uncertainty: number;
+    avg_systematic_progression: number;
+    avg_new_knowledge: number;
+    avg_evidence_documentation: number;
+  };
+  isLoading: boolean;
+}
 
-  const fetchData = useCallback(async () => {
-    try {
-      const response = await axios.get(
-        "calculations/analytics/avg_user_rating/",
-      );
-      if (
-        response.data?.success &&
-        Array.isArray(response.data.data) &&
-        response.data.data.length > 0
-      ) {
-        const items = response.data.data as {
-          avg_q1: number;
-          avg_q2: number;
-          avg_q3: number;
-          avg_q4: number;
-          avg_others: number;
-        }[];
-        const len = items.length;
-        const avg = (key: keyof (typeof items)[0]) =>
-          Number(
-            (items.reduce((sum, i) => sum + (i[key] ?? 0), 0) / len).toFixed(1),
-          );
-        setData([
-          { category: "Q1", rating: avg("avg_q1") },
-          { category: "Q2", rating: avg("avg_q2") },
-          { category: "Q3", rating: avg("avg_q3") },
-          { category: "Q4", rating: avg("avg_q4") },
-          { category: "Others", rating: avg("avg_others") },
-        ]);
-      }
-    } catch {
-      // silent
-    } finally {
-      setIsLoading(false);
-    }
-  }, [axios]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const defaultData: FeedbackDataPoint[] = [
-    { category: "Q1", rating: 0 },
-    { category: "Q2", rating: 0 },
-    { category: "Q3", rating: 0 },
-    { category: "Q4", rating: 0 },
-    { category: "Others", rating: 0 },
+//========== User Rating Chart Component ==========
+const IncompleteSectionsChart: React.FC<UserRatingChartProps> = ({
+  data,
+  overall,
+  isLoading,
+}) => {
+  const defaultData: RatingTrendPoint[] = [
+    { month: "Jan", avg_score: 0 },
+    { month: "Feb", avg_score: 0 },
+    { month: "Mar", avg_score: 0 },
+    { month: "Apr", avg_score: 0 },
+    { month: "May", avg_score: 0 },
+    { month: "Jun", avg_score: 0 },
   ];
 
   const chartData = data.length > 0 ? data : defaultData;
@@ -77,7 +48,7 @@ const IncompleteSectionsChart: React.FC = () => {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       {/*========== Header ==========*/}
       <h3 className="text-lg font-semibold text-gray-900 mb-6">
-        User Feedback
+        Average User Rating
       </h3>
 
       {/*========== Chart ==========*/}
@@ -87,20 +58,56 @@ const IncompleteSectionsChart: React.FC = () => {
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="category" stroke="#6b7280" fontSize={12} />
-            <YAxis
-              stroke="#6b7280"
-              fontSize={12}
-              domain={[0, 5]}
-              ticks={[0, 1, 2, 3, 4, 5]}
+            <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
+            <YAxis stroke="#6b7280" fontSize={12} domain={[0, 100]} />
+            <Tooltip formatter={(value) => [`${value} / 100`, "Avg Score"]} />
+            <Line
+              type="monotone"
+              dataKey="avg_score"
+              stroke="#f59e0b"
+              strokeWidth={2}
+              name="Avg Score"
+              dot={{ fill: "#f59e0b", r: 4 }}
             />
-            <Tooltip formatter={(value) => [`${value} / 5`, "Avg Rating"]} />
-            <Bar dataKey="rating" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-          </BarChart>
+          </LineChart>
         </ResponsiveContainer>
       )}
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm text-gray-600">
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs uppercase tracking-wide text-gray-500">
+            Overall Score
+          </p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">
+            {overall.avg_score.toFixed(1)}
+          </p>
+        </div>
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs uppercase tracking-wide text-gray-500">
+            Technical Uncertainty
+          </p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">
+            {overall.avg_technical_uncertainty.toFixed(1)}
+          </p>
+        </div>
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs uppercase tracking-wide text-gray-500">
+            Systematic Progression
+          </p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">
+            {overall.avg_systematic_progression.toFixed(1)}
+          </p>
+        </div>
+        <div className="rounded-lg bg-gray-50 p-3">
+          <p className="text-xs uppercase tracking-wide text-gray-500">
+            Evidence Documentation
+          </p>
+          <p className="mt-1 text-lg font-semibold text-gray-900">
+            {overall.avg_evidence_documentation.toFixed(1)}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

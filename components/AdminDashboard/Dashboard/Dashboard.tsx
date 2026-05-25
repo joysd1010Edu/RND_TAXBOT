@@ -3,42 +3,97 @@ import {
   HiOutlineUsers,
   HiOutlineFolder,
   HiOutlineClock,
-  HiOutlineExclamationCircle,
   HiOutlineDocumentText,
-  HiOutlineArrowTrendingUp as HiOutlineTrendingUp,
+  HiOutlineChartBar,
   HiOutlineCog,
-  HiOutlineChatBubbleLeftRight,
 } from "react-icons/hi2";
 import StatCard from "./StatCard";
 import QuickActionCard from "./QuickActionCard";
-import ActivityItem from "./ActivityItem";
 import { useAxios } from "@/Hooks/useAxiosInstance";
 import { useEffect, useState } from "react";
 import { toastManager } from "@/components/ui/toast";
+
+type AdminDashboardStats = {
+  users: {
+    total: number;
+    active: number;
+    pending: number;
+    suspended: number;
+    inactive: number;
+  };
+  projects: {
+    total: number;
+    draft: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  reports: {
+    avg_score: number;
+  };
+  support_tickets: {
+    open: number;
+    ongoing: number;
+    resolved: number;
+  };
+};
 
 //========== Admin Dashboard Component ==========
 const Dashboard = () => {
   //========== Stats Data ==========
   const axios = useAxios();
-  const [Statistics, setStats] = useState({
-    totalUsers: 0,
-    active_projects: 0,
-    pendingReviews: 0,
-    inactive_users: 0,
-    active_users: 0,
-    completed_projects: 0,
+  const [statistics, setStats] = useState<AdminDashboardStats>({
+    users: {
+      total: 0,
+      active: 0,
+      pending: 0,
+      suspended: 0,
+      inactive: 0,
+    },
+    projects: {
+      total: 0,
+      draft: 0,
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+    },
+    reports: {
+      avg_score: 0,
+    },
+    support_tickets: {
+      open: 0,
+      ongoing: 0,
+      resolved: 0,
+    },
   });
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await axios.get("calculations/admin_dashboard/");
-        const data = {
-          totalUsers: response.data.data.total_users,
-          active_projects: response.data.data.active_projects,
-          pendingReviews: response.data.data.pending_projects,
-          inactive_users: response.data.data.inactive_users,
-          active_users: response.data.data.active_users,
-          completed_projects: response.data.data.completed_projects,
+        const dashboardData = response.data?.data ?? response.data;
+        const data: AdminDashboardStats = {
+          users: {
+            total: dashboardData.users?.total ?? 0,
+            active: dashboardData.users?.active ?? 0,
+            pending: dashboardData.users?.pending ?? 0,
+            suspended: dashboardData.users?.suspended ?? 0,
+            inactive: dashboardData.users?.inactive ?? 0,
+          },
+          projects: {
+            total: dashboardData.projects?.total ?? 0,
+            draft: dashboardData.projects?.draft ?? 0,
+            pending: dashboardData.projects?.pending ?? 0,
+            approved: dashboardData.projects?.approved ?? 0,
+            rejected: dashboardData.projects?.rejected ?? 0,
+          },
+          reports: {
+            avg_score: dashboardData.reports?.avg_score ?? 0,
+          },
+          support_tickets: {
+            open: dashboardData.support_tickets?.open ?? 0,
+            ongoing: dashboardData.support_tickets?.ongoing ?? 0,
+            resolved: dashboardData.support_tickets?.resolved ?? 0,
+          },
         };
         setStats(data);
       } catch (error) {
@@ -57,61 +112,61 @@ const Dashboard = () => {
     {
       id: "1",
       icon: <HiOutlineUsers size={24} className="text-blue-600" />,
-      value: Statistics?.totalUsers || 0,
+      value: statistics.users.total || 0,
       label: "Total Users",
-      change: "12",
+      change: "-",
       changeType: "positive" as const,
       bgColor: "bg-blue-50",
       iconBgColor: "bg-white",
     },
     {
       id: "2",
+      icon: <HiOutlineUsers size={24} className="text-emerald-600" />,
+      value: statistics.users.active || 0,
+      label: "Active Users",
+      change: "-",
+      changeType: "positive" as const,
+      bgColor: "bg-emerald-50",
+      iconBgColor: "bg-white",
+    },
+    {
+      id: "3",
       icon: <HiOutlineFolder size={24} className="text-green-600" />,
-      value: Statistics?.active_projects || 0,
-      label: "Active Projects",
-      change: "8",
+      value: statistics.projects.total || 0,
+      label: "Total Projects",
+      change: "-",
       changeType: "positive" as const,
       bgColor: "bg-green-50",
       iconBgColor: "bg-white",
     },
     {
-      id: "3",
+      id: "4",
       icon: <HiOutlineClock size={24} className="text-orange-600" />,
-      value: Statistics?.pendingReviews || 0,
-      label: "Pending Reviews",
-      change: "5",
+      value: statistics.projects.pending || 0,
+      label: "Pending Projects",
+      change: "-",
       changeType: "negative" as const,
       bgColor: "bg-orange-50",
       iconBgColor: "bg-white",
     },
     {
-      id: "4",
-      icon: <HiOutlineExclamationCircle size={24} className="text-red-600" />,
-      value: Statistics?.inactive_users || 0,
-      label: "Inactive Users",
-      change: "3",
-      changeType: "negative" as const,
-      bgColor: "bg-red-50",
-      iconBgColor: "bg-white",
-    },
-    {
       id: "5",
       icon: <HiOutlineDocumentText size={24} className="text-purple-600" />,
-      value: Statistics?.active_users || 0,
-      label: "Active Users",
-      change: "15",
+      value: statistics.projects.approved || 0,
+      label: "Approved Projects",
+      change: "-",
       changeType: "positive" as const,
       bgColor: "bg-purple-50",
       iconBgColor: "bg-white",
     },
     {
       id: "6",
-      icon: <HiOutlineTrendingUp size={24} className="text-blue-600" />,
-      value: `${Statistics?.completed_projects || 0}`,
-      label: "Completed Projects",
-      change: "10",
+      icon: <HiOutlineChartBar size={24} className="text-sky-600" />,
+      value: statistics.reports.avg_score || 0,
+      label: "Average Report Score",
+      change: "-",
       changeType: "positive" as const,
-      bgColor: "bg-blue-50",
+      bgColor: "bg-sky-50",
       iconBgColor: "bg-white",
     },
   ];

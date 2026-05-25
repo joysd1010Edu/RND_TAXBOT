@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import {
   LineChart,
   Line,
@@ -10,7 +10,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useAxios } from "@/Hooks/useAxiosInstance";
 
 interface ActivityDataPoint {
   month: string;
@@ -18,40 +17,16 @@ interface ActivityDataPoint {
   pending: number;
 }
 
+interface UserEngagementChartProps {
+  data: ActivityDataPoint[];
+  isLoading: boolean;
+}
+
 //========== User Engagement Chart Component ==========
-const UserEngagementChart: React.FC = () => {
-  const axios = useAxios();
-  const [data, setData] = useState<ActivityDataPoint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchData = useCallback(async () => {
-    try {
-      const response = await axios.get("calculations/analytics/user_activity/");
-      if (
-        response.data?.success &&
-        Array.isArray(response.data.monthly_registrations)
-      ) {
-        setData(
-          response.data.monthly_registrations.map(
-            (item: ActivityDataPoint) => ({
-              month: item.month,
-              active: item.active,
-              pending: item.pending,
-            }),
-          ),
-        );
-      }
-    } catch {
-      // silent
-    } finally {
-      setIsLoading(false);
-    }
-  }, [axios]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
+const UserEngagementChart: React.FC<UserEngagementChartProps> = ({
+  data,
+  isLoading,
+}) => {
   const defaultData: ActivityDataPoint[] = [
     { month: "Jan", active: 0, pending: 0 },
     { month: "Feb", active: 0, pending: 0 },
@@ -67,7 +42,7 @@ const UserEngagementChart: React.FC = () => {
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       {/*========== Header ==========*/}
       <h3 className="text-lg font-semibold text-gray-900 mb-6">
-        User Engagement Trends
+        User Activity Trends
       </h3>
 
       {/*========== Chart ==========*/}
