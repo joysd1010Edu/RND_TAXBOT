@@ -31,7 +31,7 @@ const OrganizationDetails: React.FC = () => {
       organizationName: "",
       abn: "",
       industry: "",
-      companySize: "",
+      companySize: undefined,
       streetAddress: "",
       city: "",
       state: "",
@@ -61,28 +61,6 @@ const OrganizationDetails: React.FC = () => {
       organization.company_size !== null
         ? Number(organization.company_size)
         : undefined,
-    streetAddress: organization.street_address || "",
-    city: organization.city || "",
-    state: organization.state || "",
-    postcode: organization.post_code || "",
-    organizationPhone: organization.phone || "",
-    website: organization.website || "",
-    fiscalYearEnd: organization.fiscal_year_end
-      ? String(organization.fiscal_year_end).split("T")[0]
-      : "",
-  });
-
-  const mapOrganizationToForm = (
-    organization: Record<string, any>,
-  ): OrganizationForm => ({
-    organizationName: organization.organization_name || "",
-    abn: organization.abn || "",
-    industry: organization.industry || "",
-    companySize:
-      organization.company_size !== undefined &&
-      organization.company_size !== null
-        ? String(organization.company_size)
-        : "",
     streetAddress: organization.street_address || "",
     city: organization.city || "",
     state: organization.state || "",
