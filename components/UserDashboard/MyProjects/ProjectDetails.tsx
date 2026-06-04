@@ -695,7 +695,7 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
                   </p>
                 </div>
                 <a
-                  href={`${reportData.report_pdf.startsWith("http") ? "" : "http://31.97.145.112"}${reportData.report_pdf}`}
+                  href={`${reportData.report_pdf.startsWith("http") ? "" : "https://api.rdtaxbot.com.au"}${reportData.report_pdf}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"

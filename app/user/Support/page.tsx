@@ -28,7 +28,6 @@ type SupportQuery = {
   excerpt: string;
   status: SupportStatus;
   timeAgo: string;
-  attachmentName?: string;
 };
 
 const statusBadge: Record<SupportStatus, string> = {
@@ -63,18 +62,6 @@ const formatRelativeTime = (value: unknown): string => {
   return `${days} day${days > 1 ? "s" : ""} ago`;
 };
 
-const getAttachmentName = (
-  item: Record<string, unknown>,
-): string | undefined => {
-  return (
-    (item.attachment_name as string) ||
-    ((item.attachment as Record<string, unknown> | undefined)
-      ?.name as string) ||
-    (item.file_name as string) ||
-    undefined
-  );
-};
-
 const normalizeList = (payload: unknown): SupportQuery[] => {
   const source = Array.isArray(payload)
     ? payload
@@ -97,7 +84,6 @@ const normalizeList = (payload: unknown): SupportQuery[] => {
       excerpt: String(messageText).slice(0, 80),
       status: toSupportStatus(item.status),
       timeAgo: formatRelativeTime(item.updated_at || item.created_at),
-      attachmentName: getAttachmentName(item),
     };
   });
 };
@@ -156,7 +142,6 @@ const SupportPage = () => {
   const [search, setSearch] = useState("");
   const [newSubject, setNewSubject] = useState("");
   const [newBody, setNewBody] = useState("");
-  const [attachment, setAttachment] = useState<File | null>(null);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -211,9 +196,6 @@ const SupportPage = () => {
         const detailStatus = toSupportStatus(
           (detail as Record<string, unknown>)?.status,
         );
-        const detailAttachmentName = getAttachmentName(
-          (detail || {}) as Record<string, unknown>,
-        );
         const updatedTime = formatRelativeTime(
           (detail as Record<string, unknown>)?.updated_at ||
             (detail as Record<string, unknown>)?.created_at,
@@ -226,7 +208,6 @@ const SupportPage = () => {
                   ...item,
                   status: detailStatus,
                   timeAgo: updatedTime,
-                  attachmentName: detailAttachmentName || item.attachmentName,
                 }
               : item,
           ),
@@ -274,31 +255,16 @@ const SupportPage = () => {
 
     try {
       setIsCreating(true);
-      let response;
-
-      if (attachment) {
-        const formData = new FormData();
-        formData.append("subject", newSubject.trim());
-        formData.append("initial_message", newBody.trim());
-        formData.append("attachment", attachment);
-        response = await axios.post("/support_inbox/create/", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-      } else {
-        response = await axios.post("/support_inbox/create/", {
-          subject: newSubject.trim(),
-          initial_message: newBody.trim(),
-        });
-      }
+      const response = await axios.post("/support_inbox/create/", {
+        subject: newSubject.trim(),
+        initial_message: newBody.trim(),
+      });
 
       const created = response.data?.data ?? response.data;
       const createdId = String((created as Record<string, unknown>)?.id || "");
 
       setNewSubject("");
       setNewBody("");
-      setAttachment(null);
 
       await fetchSupportList();
       if (createdId) {
@@ -330,18 +296,6 @@ const SupportPage = () => {
         message: replyMessage.trim(),
       });
 
-      // User follow-up moves the ticket back to pending
-      try {
-        await axios.patch(`/support_inbox/${selectedId}/resolved/`, {
-          status: "pending",
-        });
-      } catch (statusError) {
-        console.error(
-          "Failed to set pending status after user reply",
-          statusError,
-        );
-      }
-
       setReplyMessage("");
       await fetchSupportDetails(selectedId);
       await fetchSupportList();
@@ -366,13 +320,7 @@ const SupportPage = () => {
     if (!selectedId || selected?.status === "resolved") return;
 
     try {
-      try {
-        await axios.patch(`/support_inbox/${selectedId}/resolved/`, {
-          status: "resolved",
-        });
-      } catch (firstError) {
-        await axios.patch(`/support_inbox/${selectedId}/resolved/`, {});
-      }
+      await axios.patch(`/support_inbox/${selectedId}/resolved/`, {});
 
       await fetchSupportDetails(selectedId);
       await fetchSupportList();
@@ -480,17 +428,6 @@ const SupportPage = () => {
                 placeholder="Describe your question..."
                 className="bg-slate-50"
               />
-              <div className="flex flex-col items-center justify-between gap-3 text-sm text-slate-600">
-                <label className="flex-1" htmlFor="supportAttachment">
-                  Optional attachment (one file)
-                </label>
-                <input
-                  id="supportAttachment"
-                  type="file"
-                  onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
-                  className="text-sm border border-slate-300 rounded-md p-1 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
               <Button
                 onClick={handleCreate}
                 className="w-full"
@@ -522,11 +459,6 @@ const SupportPage = () => {
                       </span>
                       <span>{selected.timeAgo}</span>
                     </div>
-                    {selected.attachmentName && (
-                      <div className="text-sm text-slate-600 mt-1">
-                        Attachment: {selected.attachmentName}
-                      </div>
-                    )}
                   </div>
                   {selected.status !== "resolved" && (
                     <Button

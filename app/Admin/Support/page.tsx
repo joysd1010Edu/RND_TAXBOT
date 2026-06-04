@@ -308,21 +308,6 @@ const SupportAdminPage = () => {
     [queries, search],
   );
 
-  const patchStatus = useCallback(
-    async (inboxId: string, status: SupportStatus) => {
-      try {
-        await axios.patch(`/support_inbox/${inboxId}/resolved/`, { status });
-      } catch (firstError) {
-        if (status === "resolved") {
-          await axios.patch(`/support_inbox/${inboxId}/resolved/`, {});
-          return;
-        }
-        throw firstError;
-      }
-    },
-    [axios],
-  );
-
   const handleSendReply = async () => {
     if (!selectedId || !reply.trim() || selected?.status === "resolved") return;
 
@@ -331,9 +316,6 @@ const SupportAdminPage = () => {
       await axios.post(`/support_inbox/${selectedId}/send/`, {
         message: reply.trim(),
       });
-
-      // Admin reply moves status to ongoing
-      await patchStatus(selectedId, "ongoing");
 
       setReply("");
       await fetchSupportDetails(selectedId);
@@ -361,7 +343,7 @@ const SupportAdminPage = () => {
 
     try {
       setIsResolving(true);
-      await patchStatus(selectedId, "resolved");
+      await axios.patch(`/support_inbox/${selectedId}/resolved/`, {});
       await fetchSupportDetails(selectedId);
       await fetchSupportList();
       toastManager.add({

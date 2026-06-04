@@ -196,7 +196,7 @@ const RejectModal = ({
 
 //========== PDF Preview ==========
 // Fetches PDF as a data URL so the preview renders reliably in the modal.
-const BASE_URL = "http://31.97.145.112";
+const BASE_URL = "https://api.rdtaxbot.com.au";
 
 // const PdfPreview = ({ pdfPath }: { pdfPath: string }) => {
 //   const [blobUrl, setBlobUrl] = useState<string | null>(null);

@@ -5,15 +5,15 @@ export interface SecurityForm {
 }
 
 export interface OrganizationForm {
-  organizationName: string;
+  organization_name: string;
   abn: string;
   industry: string;
-  companySize: number | undefined;
-  streetAddress: string;
+  company_size: number | undefined;
+  street_address: string;
   city: string;
   state: string;
-  postcode: string;
-  organizationPhone: string;
+  post_code: string;
+  phone: string;
   website: string;
-  fiscalYearEnd: string;
+  fiscal_year_end: string;
 }
