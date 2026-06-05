@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import {
   HiOutlineArrowLeft,
@@ -20,6 +26,7 @@ type SupportMessage = {
   sender: "user" | "admin";
   content: string;
   timestamp: string;
+  optimistic?: boolean;
 };
 
 type SupportQuery = {
@@ -66,6 +73,12 @@ const formatRelativeTime = (value: unknown): string => {
   if (hours < 24) return `${hours} hr ago`;
   const days = Math.floor(hours / 24);
   return `${days} day${days > 1 ? "s" : ""} ago`;
+};
+
+const getSortTime = (value: unknown, fallback: number): number => {
+  if (!value) return fallback;
+  const parsedDate = new Date(String(value));
+  return Number.isNaN(parsedDate.getTime()) ? fallback : parsedDate.getTime();
 };
 
 const getUserName = (item: Record<string, unknown>): string => {
@@ -146,24 +159,28 @@ const normalizeMessages = (payload: unknown): SupportMessage[] => {
         ? detail.chat
         : [];
 
-  const mappedMessages = rawMessages.map((entry): SupportMessage => {
-    const item = (entry || {}) as Record<string, unknown>;
-    const senderRaw = String(
-      item.sender || item.role || item.user_type || "user",
-    ).toLowerCase();
+  const mappedMessages = rawMessages
+    .map((entry, index) => {
+      const item = (entry || {}) as Record<string, unknown>;
+      const senderRaw = String(
+        item.sender || item.role || item.user_type || "user",
+      ).toLowerCase();
 
-    const isAdminSender =
-      senderRaw.includes("support") ||
-      senderRaw.includes("admin") ||
-      senderRaw.includes("staff") ||
-      senderRaw.includes("assistant");
+      const isAdminSender =
+        senderRaw.includes("support") ||
+        senderRaw.includes("admin") ||
+        senderRaw.includes("staff") ||
+        senderRaw.includes("assistant");
 
-    return {
-      sender: isAdminSender ? "admin" : "user",
-      content: String(item.message || item.content || item.text || ""),
-      timestamp: formatRelativeTime(item.created_at || item.timestamp),
-    };
-  });
+      return {
+        sender: isAdminSender ? "admin" : "user",
+        content: String(item.message || item.content || item.text || ""),
+        timestamp: formatRelativeTime(item.created_at || item.timestamp),
+        sortTime: getSortTime(item.created_at || item.timestamp, index),
+      } as SupportMessage & { sortTime: number };
+    })
+    .sort((a, b) => a.sortTime - b.sortTime)
+    .map(({ sortTime: _sortTime, ...message }) => message);
 
   if (mappedMessages.length > 0) {
     return mappedMessages;
@@ -194,11 +211,20 @@ const SupportAdminPage = () => {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
+  const messageEndRef = useRef<HTMLDivElement | null>(null);
 
   const selected = useMemo(
     () => queries.find((q) => q.id === selectedId),
     [queries, selectedId],
   );
+
+  useEffect(() => {
+    if (!selectedId) return;
+    messageEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [messages, selectedId, isLoadingDetails]);
 
   const fetchSupportList = useCallback(async () => {
     try {
@@ -309,12 +335,34 @@ const SupportAdminPage = () => {
   );
 
   const handleSendReply = async () => {
-    if (!selectedId || !reply.trim() || selected?.status === "resolved") return;
+    const draft = reply.trim();
+    if (!selectedId || !draft || selected?.status === "resolved") return;
+
+    const optimisticMessage: SupportMessage = {
+      sender: "admin",
+      content: draft,
+      timestamp: "Sending...",
+      optimistic: true,
+    };
+    const previousMessages = messages;
 
     try {
       setIsReplying(true);
+      setMessages((current) => [...current, optimisticMessage]);
+      setQueries((prev) =>
+        prev.map((item) =>
+          item.id === selectedId
+            ? {
+                ...item,
+                excerpt: draft.slice(0, 80),
+                timeAgo: "just now",
+                status: item.status === "resolved" ? item.status : "ongoing",
+              }
+            : item,
+        ),
+      );
       await axios.post(`/support_inbox/${selectedId}/send/`, {
-        message: reply.trim(),
+        message: draft,
       });
 
       setReply("");
@@ -328,6 +376,8 @@ const SupportAdminPage = () => {
       });
     } catch (error) {
       console.error("Failed to send support reply", error);
+      setMessages(previousMessages);
+      setReply(draft);
       toastManager.add({
         title: "Error",
         description: "Failed to send reply.",
@@ -437,7 +487,7 @@ const SupportAdminPage = () => {
             </div>
           </div>
 
-          <div className="bg-white border col-span-2 border-slate-200 rounded-2xl shadow-sm p-7 min-h-130 flex flex-col">
+          <div className="bg-white border col-span-2 border-slate-200 rounded-2xl shadow-sm p-7 min-h-130 flex flex-col min-h-0">
             {!selected ? (
               <div className="flex flex-1 flex-col items-center justify-center text-slate-500 gap-2">
                 <HiOutlineInboxStack className="w-12 h-12" />
@@ -482,7 +532,7 @@ const SupportAdminPage = () => {
                   </Button>
                 </div>
 
-                <div className="flex-1 space-y-4 py-4 overflow-y-auto pr-2">
+                <div className="flex-1 min-h-0 space-y-4 py-4 overflow-y-auto  pr-2">
                   {isLoadingDetails && (
                     <div className="text-sm text-slate-500">
                       Loading thread...
@@ -501,7 +551,9 @@ const SupportAdminPage = () => {
                       <div
                         className={`rounded-xl px-4 py-3 text-sm leading-relaxed border ${
                           msg.sender === "admin"
-                            ? "bg-indigo-50 border-indigo-100 text-slate-900"
+                            ? msg.optimistic
+                              ? "bg-indigo-50 border-indigo-100 text-slate-500 italic"
+                              : "bg-indigo-50 border-indigo-100 text-slate-900"
                             : "bg-slate-50 border-slate-200 text-slate-800"
                         }`}
                       >
@@ -512,6 +564,7 @@ const SupportAdminPage = () => {
                       </span>
                     </div>
                   ))}
+                  <div ref={messageEndRef} />
                 </div>
 
                 <div className="border-t border-slate-200 pt-4 space-y-3">

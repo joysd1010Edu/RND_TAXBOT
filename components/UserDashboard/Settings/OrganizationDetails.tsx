@@ -38,7 +38,9 @@ const OrganizationDetails: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [organizationId, setOrganizationId] = useState<number | null>(null);
+  const [profileData, setProfileData] = useState<Record<string, any> | null>(
+    null,
+  );
 
   const form = useForm<OrganizationForm>({
     defaultValues: ORGANIZATION_DEFAULT_VALUES,
@@ -56,7 +58,7 @@ const OrganizationDetails: React.FC = () => {
     organization: Record<string, any>,
   ): OrganizationForm => ({
     organization_name:
-      organization.organization_name || organization.company || "",
+      organization.company || organization.organization_name || "",
     abn: organization.abn || "",
     industry: organization.industry || "",
     company_size:
@@ -78,17 +80,11 @@ const OrganizationDetails: React.FC = () => {
   const fetchOrganization = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get("/organization/");
+      const response = await axios.get("/users/profile/");
       const payload = response.data?.data || response.data;
-      const firstOrganization = Array.isArray(payload)
-        ? payload[0]
-        : Array.isArray(payload?.results)
-          ? payload.results[0]
-          : payload;
-
-      if (firstOrganization) {
-        setOrganizationId(firstOrganization.id ?? null);
-        form.reset(mapOrganizationToForm(firstOrganization));
+      if (payload) {
+        setProfileData(payload);
+        form.reset(mapOrganizationToForm(payload));
       }
     } catch (error) {
       console.error("Failed to load organization details", error);
@@ -113,7 +109,7 @@ const OrganizationDetails: React.FC = () => {
       setIsSaving(true);
 
       const payload = {
-        organization_name: data.organization_name,
+        company: data.organization_name,
         abn: data.abn,
         industry: data.industry,
         company_size: Number.isFinite(Number(data.company_size))
@@ -128,16 +124,12 @@ const OrganizationDetails: React.FC = () => {
         fiscal_year_end: data.fiscal_year_end,
       };
 
-      let response;
-      if (organizationId) {
-        response = await axios.put(`/organization/${organizationId}/`, payload);
-      } else {
-        response = await axios.post("/organization/", payload);
-      }
+      const response = await axios.put("/users/profile/", payload);
 
       const savedOrganization = response.data?.data || response.data;
-      if (savedOrganization?.id) {
-        setOrganizationId(savedOrganization.id);
+      if (savedOrganization) {
+        setProfileData(savedOrganization);
+        form.reset(mapOrganizationToForm(savedOrganization));
       }
 
       setIsEditing(false);
