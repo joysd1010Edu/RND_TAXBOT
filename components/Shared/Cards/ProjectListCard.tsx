@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   MdRemoveRedEye,
@@ -11,6 +11,8 @@ import {
 } from "react-icons/md";
 import { FaFileAlt } from "react-icons/fa";
 import { Project } from "@/Type/UserDashboard/MyProject";
+import { useAxios } from "@/Hooks/useAxiosInstance";
+import { toastManager } from "@/components/ui/toast";
 
 interface ProjectCardProps {
   project: Project;
@@ -20,14 +22,60 @@ interface ProjectCardProps {
 //========== Project Card Component ===========
 const ProjectListCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
   const router = useRouter();
+  const axios = useAxios();
+  const [isRenewing, setIsRenewing] = useState(false);
 
   const handleViewProject = () => {
     router.push(`/user/MyProjects/${project.id}`);
   };
 
-  const handleRenewProject = () => {
-    // Navigate to CreateProject for renewal (creates a copy)
-    router.push(`/user/CreateProject?renewFrom=${project.id}`);
+  const handleRenewProject = async () => {
+    if (isRenewing) return;
+
+    const currentYear = new Date().getFullYear();
+
+    try {
+      setIsRenewing(true);
+      const response = await fetch(
+        `https://api.rdtaxbot.com.au/api/tax_project/projects/${project.id}/duplicate-for-year/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            new_project_year: String(currentYear),
+          }),
+        },
+      );
+      const responseData = await response.json();
+      console.log("Renew Project Response:", response);
+      const duplicatedProject = responseData?.data ?? responseData;
+      const duplicatedProjectId = String(
+        duplicatedProject?.id ?? duplicatedProject?.project_id ?? "",
+      );
+
+      toastManager.add({
+        type: "success",
+        title: "Project Renewed",
+        description: `${project.title} has been duplicated for ${currentYear}.`,
+      });
+
+      if (duplicatedProjectId) {
+        router.push(`/user/MyProjects/${duplicatedProjectId}`);
+      } else {
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Failed to renew project", error);
+      toastManager.add({
+        type: "error",
+        title: "Error",
+        description: "Failed to renew project. Please try again.",
+      });
+    } finally {
+      setIsRenewing(false);
+    }
   };
 
   //========== Status Badge Styling ===========
@@ -118,10 +166,11 @@ const ProjectListCard: React.FC<ProjectCardProps> = ({ project, onDelete }) => {
         {project.canRenew && (
           <button
             onClick={handleRenewProject}
+            disabled={isRenewing}
             className="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2.5 px-4 rounded-lg border border-gray-300 transition-colors flex items-center justify-center gap-2"
           >
             <MdRefresh size={18} />
-            <span>Renew</span>
+            <span>{isRenewing ? "Renewing..." : "Renew"}</span>
           </button>
         )}
         {onDelete && (

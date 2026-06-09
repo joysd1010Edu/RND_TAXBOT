@@ -92,6 +92,9 @@ const Project = () => {
   //========== Filter Projects ==========
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
+      if (project.status?.toLowerCase() === "draft") {
+        return false;
+      }
       const matchesSearch =
         (project.project_title ?? "")
           .toLowerCase()
