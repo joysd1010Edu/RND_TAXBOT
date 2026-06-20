@@ -10,7 +10,7 @@ import {
   HiOutlineEye,
   HiOutlineArrowDownTray,
 } from "react-icons/hi2";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useAxios } from "@/Hooks/useAxiosInstance";
 import { toastManager } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
+import DatePickerField, { formatDateForDisplay } from "./DatePickerField";
 
 type ProjectResponse = {
   id: string | number;
@@ -256,7 +257,8 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [showFullReport, setShowFullReport] = useState(false);
 
-  const { register, handleSubmit, reset, watch } = useForm<FormValues>({
+  const { register, handleSubmit, reset, watch, setValue } =
+    useForm<FormValues>({
     defaultValues: emptyFormValues(),
   });
 
@@ -690,8 +692,7 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
                     Project Report
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
-                    Generated:{" "}
-                    {new Date(reportData.generated_at).toLocaleString()}
+                    Generated: {formatDateForDisplay(reportData.generated_at)}
                   </p>
                 </div>
                 <a
@@ -902,12 +903,16 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
                 >
                   Start Date
                 </Label>
-                <Input
+                <DatePickerField
                   id="start_date"
-                  {...register("start_date")}
+                  value={watch("start_date")}
+                  onChange={(value) =>
+                    setValue("start_date", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                   disabled={!canEdit}
-                  className="h-12 text-base"
-                  placeholder="YYYY-MM-DD"
                 />
               </div>
               <div className="space-y-2">
@@ -917,12 +922,16 @@ const ProjectDetails = ({ projectId }: { projectId: string }) => {
                 >
                   Finish Date
                 </Label>
-                <Input
+                <DatePickerField
                   id="finish_date"
-                  {...register("finish_date")}
+                  value={watch("finish_date")}
+                  onChange={(value) =>
+                    setValue("finish_date", value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    })
+                  }
                   disabled={!canEdit}
-                  className="h-12 text-base"
-                  placeholder="YYYY-MM-DD"
                 />
               </div>
               <div className="space-y-2">

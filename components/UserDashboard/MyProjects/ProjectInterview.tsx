@@ -7,11 +7,13 @@ import {
   FiAlertTriangle,
   FiRefreshCw,
   FiMessageSquare,
+  FiArrowLeft,
 } from "react-icons/fi";
 import { BsRobot } from "react-icons/bs";
 import { ImSpinner2 } from "react-icons/im";
 import { useAxios } from "@/Hooks/useAxiosInstance";
 import ReactMarkdown from "react-markdown";
+import Link from "next/link";
 
 type Message = {
   id: number;
@@ -20,6 +22,22 @@ type Message = {
 };
 
 type FetchStatus = "idle" | "loading" | "error" | "empty";
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (typeof error !== "object" || error === null) return fallback;
+
+  const maybeAxiosError = error as {
+    response?: { data?: { detail?: string; message?: string } };
+    message?: string;
+  };
+
+  return (
+    maybeAxiosError.response?.data?.detail ??
+    maybeAxiosError.response?.data?.message ??
+    maybeAxiosError.message ??
+    fallback
+  );
+};
 
 // ────────────────────────── COMPONENT ───────────────────────────────────────
 export default function ProjectChat({ projectId }: { projectId: string }) {
@@ -55,13 +73,8 @@ export default function ProjectChat({ projectId }: { projectId: string }) {
         ),
       );
       setFetchStatus(msgs.length === 0 ? "empty" : "idle");
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.detail ??
-        err?.response?.data?.message ??
-        err?.message ??
-        "Failed to load chat history.";
-      setErrorMsg(msg);
+    } catch (err: unknown) {
+      setErrorMsg(getErrorMessage(err, "Failed to load chat history."));
       setFetchStatus("error");
     }
   };
@@ -124,12 +137,8 @@ export default function ProjectChat({ projectId }: { projectId: string }) {
       if (data?.interview_complete === true) {
         setInterviewComplete(true);
       }
-    } catch (err: any) {
-      const errText =
-        err?.response?.data?.detail ??
-        err?.response?.data?.message ??
-        err?.message ??
-        "Please try again.";
+    } catch (err: unknown) {
+      const errText = getErrorMessage(err, "Please try again.");
       const errMsg: Message = {
         id: Date.now() + 2,
         role: "assistant",
@@ -190,7 +199,14 @@ export default function ProjectChat({ projectId }: { projectId: string }) {
           </div>
         </div>
 
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
+          <Link
+            href={`/user/MyProjects/${projectId}`}
+            className="flex items-center gap-2 rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+          >
+            <FiArrowLeft size={16} />
+            Back to Project Details
+          </Link>
           <span
             className="text-xs font-semibold px-3 py-1 rounded-full"
             style={{

@@ -37,6 +37,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
+import DatePickerField, { formatDateForDisplay } from "./DatePickerField";
 
 const projectSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
@@ -54,6 +55,16 @@ const projectSchema = z.object({
 });
 
 type ProjectFormDataSchema = z.infer<typeof projectSchema>;
+
+type ApiProject = {
+  id?: string | number;
+  title?: string;
+  project_title?: string;
+  project_year?: string | number;
+  financial_year?: string | number;
+  status?: string;
+  updated_at?: string;
+};
 
 //========== Status Derivation ===========
 const deriveProgress = (status: string): number => {
@@ -90,7 +101,7 @@ const loadLocalDrafts = (): Project[] => {
         progress: 0,
         status: "DRAFT",
         lastUpdated: parsed.updatedAt
-          ? new Date(parsed.updatedAt).toLocaleDateString()
+          ? formatDateForDisplay(parsed.updatedAt)
           : "N/A",
         canEdit: true,
         canRenew: false,
@@ -121,6 +132,8 @@ const MyProject: React.FC = () => {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ProjectFormDataSchema>({
     resolver: zodResolver(projectSchema),
@@ -168,7 +181,7 @@ const MyProject: React.FC = () => {
     try {
       const response = await axios.get("/tax_project/projects/");
       // Some APIs wrap it in data.data or similar, or just a direct array. Handling both:
-      const apiData: any[] = Array.isArray(response.data)
+      const apiData: ApiProject[] = Array.isArray(response.data)
         ? response.data
         : (response.data?.data ?? []);
       const apiProjects: Project[] = apiData.map((p) => ({
@@ -181,7 +194,7 @@ const MyProject: React.FC = () => {
         progress: deriveProgress(p.status || ""),
         status: mapApiStatus(p.status || ""),
         lastUpdated: p.updated_at
-          ? new Date(p.updated_at).toLocaleDateString()
+          ? formatDateForDisplay(p.updated_at)
           : "N/A",
         canEdit: p.status === "DRAFT" || p.status === "REJECTED",
         canRenew: p.status === "APPROVED",
@@ -402,22 +415,34 @@ const MyProject: React.FC = () => {
                       <Label htmlFor="start_date" className="text-lg">
                         Start Date
                       </Label>
-                      <Input
+                      <DatePickerField
                         id="start_date"
-                        type="date"
-                        {...register("start_date")}
-                        className="text-lg h-12"
+                        value={watch("start_date")}
+                        onChange={(value) =>
+                          setValue("start_date", value, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: true,
+                          })
+                        }
+                        className="text-lg"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="finish_date" className="text-lg">
                         Finish Date
                       </Label>
-                      <Input
+                      <DatePickerField
                         id="finish_date"
-                        type="date"
-                        {...register("finish_date")}
-                        className="text-lg h-12"
+                        value={watch("finish_date")}
+                        onChange={(value) =>
+                          setValue("finish_date", value, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: true,
+                          })
+                        }
+                        className="text-lg"
                       />
                     </div>
                   </div>
